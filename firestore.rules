@@ -1,0 +1,65 @@
+rules_version = '2';
+// Inclui+ · regras de segurança do Firestore
+//  users/{uid}            perfil e ambiente — só o próprio (conta com e-mail/Google ou anónima)
+//  users/{uid}/signs      os meus sinais gravados — só o próprio
+//  users/{uid}/conversations  conversas guardadas (opcional) — só o próprio
+//  signs/{id}             sinais partilhados com a comunidade
+//                         · aprovados: qualquer pessoa lê (a aplicação treinada é para todos, com ou sem conta)
+//                         · pendentes: quem tem sessão (mesmo anónima) lê e vota; 3 votos a favor aprovam
+//                         · validadores (documento admins/{uid}) aprovam ou rejeitam diretamente
+//  admins/{uid}           lista de intérpretes validadores — criada só na consola do Firebase
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isReviewer() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+      match /{sub}/{id} {
+        allow read, write: if signedIn() && request.auth.uid == uid && sub in ['signs', 'conversations'];
+      }
+    }
+
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /signs/{id} {
+      allow read: if resource.data.status == 'aprovado'
+        || (signedIn() && (resource.data.status == 'pendente' || resource.data.author == request.auth.uid || isReviewer()));
+
+      allow create: if signedIn()
+        && request.resource.data.author == request.auth.uid
+        && request.resource.data.status == 'pendente'
+        && request.resource.data.up.size() == 0 && request.resource.data.down.size() == 0
+        && request.resource.data.words is list && request.resource.data.words.size() > 0 && request.resource.data.words.size() <= 5
+        && request.resource.data.sl is string && request.resource.data.data is string && request.resource.data.data.size() < 600000;
+
+      // validadores: aprovar ou rejeitar
+      allow update: if isReviewer()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedBy', 'reviewedAt'])
+        && request.resource.data.status in ['aprovado', 'rejeitado'];
+
+      // comunidade: cada pessoa vota uma vez (não no próprio sinal); a aprovação só acontece com votos suficientes
+      allow update: if signedIn() && resource.data.status == 'pendente' && resource.data.author != request.auth.uid
+        && !(request.auth.uid in resource.data.up) && !(request.auth.uid in resource.data.down)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['up', 'down', 'status'])
+        && validVote(request.auth.uid);
+
+      // quem gravou pode apagar enquanto está pendente
+      allow delete: if signedIn() && resource.data.author == request.auth.uid && resource.data.status == 'pendente';
+    }
+
+    function validVote(uid) {
+      let up = request.resource.data.up;
+      let down = request.resource.data.down;
+      let oneVote = (up == resource.data.up.concat([uid]) && down == resource.data.down)
+                 || (down == resource.data.down.concat([uid]) && up == resource.data.up);
+      let st = request.resource.data.status;
+      return oneVote && (st == 'pendente'
+        || (st == 'aprovado' && up.size() >= 3 && down.size() * 2 < up.size())
+        || (st == 'rejeitado' && down.size() >= 3 && down.size() > up.size()));
+    }
+  }
+}

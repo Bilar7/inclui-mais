@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Imagem da abertura</title>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.js","three/addons/":"../vendor/three/addons/"}}</script>
+<style>body{margin:0;background:transparent}canvas{width:600px;height:900px;display:block}</style></head>
+<body><canvas id="c"></canvas><script>window.__INCLUI_BASE = new URL("../", location.href).href;</script><script type="module">
+// Gera as pessoas da imagem de abertura (surda a sinalizar, cega com bengala e óculos escuros, etc.)
+// com fundo transparente. Usado por tools/make-hero.py.
+import * as THREE from 'three';
+import { Interpreter } from '../js/avatar/avatar.js';
+import { attach } from '../js/avatar/customize.js';
+import { translate } from '../js/sign/translate.js';
+const it = new Interpreter(document.getElementById('c'));
+it.setBackdrop(false);
+window.it = it;
+const dark = new THREE.MeshStandardMaterial({ color: 0x111418, roughness: 0.15, metalness: 0.4 });
+function sunglasses(o) {
+  const g = new THREE.Group();
+  for (const s of [-1, 1]) { const l = new THREE.Mesh(new THREE.CircleGeometry(0.024, 24), dark); l.scale.y = 0.8; l.position.x = s * 0.033; g.add(l); }
+  const br = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.004, 0.004), dark); g.add(br);
+  attach(it.rig, it.rig.head, g, o || [0, 0.075, 0.105]);
+}
+function cane(side = 'R') {
+  const a = it.rig[side];
+  const g = new THREE.Group();
+  const white = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.4 });
+  const red = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.4 });
+  const len = 1.0;
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, len, 12), white); shaft.position.y = -len / 2; g.add(shaft);
+  const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.14, 12), red); tip.position.y = -len + 0.07; g.add(tip);
+  // bengala colocada no mundo: da mão até ao chão, inclinada para fora e para a frente
+  it.scene.updateMatrixWorld(true);
+  const hp = new THREE.Vector3(); a.hand.getWorldPosition(hp);
+  const out = Math.sign(hp.x) || 1;
+  g.position.copy(hp).add(new THREE.Vector3(0, -0.05, 0.04));
+  g.rotation.set(-0.28, 0, out * 0.38);
+  it.scene.add(g); window.__cane = g;
+}
+window.go = async (look, opt = {}) => {
+  if (window.__cane) { it.scene.remove(window.__cane); window.__cane = null; }
+  await it.show(look, opt.place || 'servicos'); it.setBackdrop(false); it.setFraming(opt.framing || 'full');
+  if (opt.noAcc) it.rig.acc.forEach((h) => (h.visible = false));
+  if (opt.glasses) sunglasses(opt.glassPos);
+  if (opt.cane) { await new Promise((r) => setTimeout(r, 300)); cane(opt.cane); }
+  if (opt.sign) { const { items } = translate(opt.sign, 'pt'); it.play(items, {}); }
+  if (opt.mood) it.setMood(opt.mood);
+  return true;
+};
+window.ready = true;
+</script></body></html>

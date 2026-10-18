@@ -1,0 +1,19 @@
+{
+  "name": "inclui-mais",
+  "version": "2.0.0",
+  "description": "Inclui+ — tradução entre língua de sinais e voz, com intérprete virtual 3D (Bilar DigitalTech Solutions)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "build": "node tools/build.mjs"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

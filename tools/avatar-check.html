@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verificador de avatares</title>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.js","three/addons/":"../vendor/three/addons/"}}</script>
+<style>
+  :root{--ink:#10202b;--muted:#5c6c7a;--line:#dfe6eb;--ok:#1f9d55;--warn:#c27c00;--bad:#d03b3b;--bg:#eef3f5}
+  body{margin:0;font:15px/1.5 Manrope,Segoe UI,system-ui,sans-serif;color:var(--ink);background:var(--bg);padding:20px max(16px,env(safe-area-inset-left,0px))}
+  h1{font:800 1.5rem Sora,Segoe UI,sans-serif;margin:0 0 4px}
+  p{margin:0 0 14px;color:var(--muted)}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .bar input[type=text]{flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+  button,label.btn{border:0;background:#0b6f7c;color:#fff;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+  td:first-child{color:var(--muted);width:42%}
+  .ok{color:var(--ok);font-weight:800}.warn{color:var(--warn);font-weight:800}.bad{color:var(--bad);font-weight:800}
+  .shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .shots figure{margin:0}.shots img{width:100%;border-radius:10px;background:#dfe8ee;display:block}
+  .shots figcaption{font-size:.78rem;color:var(--muted);text-align:center}
+  .verdict{font:800 1.15rem Sora,sans-serif;margin:0 0 8px}
+  code{background:var(--bg);padding:1px 5px;border-radius:5px}
+  canvas{display:none}
+</style>
+</head>
+<body>
+<h1>Verificador de avatares · Inclui+</h1>
+<p>Confirma se um modelo .glb (por exemplo, um MetaHuman convertido) está pronto para sinais, expressões e telemóvel.</p>
+<div class="bar">
+  <input type="text" id="url" placeholder="Caminho do modelo, ex.: ../assets/avatars/metahuman/amina_mobile.glb" value="../assets/avatars/standard/feminino.glb">
+  <button id="go">Verificar</button>
+  <label class="btn" for="file">Escolher ficheiro…</label><input type="file" id="file" accept=".glb,.gltf" hidden>
+</div>
+<div class="grid">
+  <div class="card"><p class="verdict" id="verdict">—</p><table id="table"></table></div>
+  <div class="card"><div class="shots" id="shots"></div></div>
+</div>
+<canvas id="c" width="480" height="480"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { buildRig, solveArm, toWorld, dirV, frameQuat, thumbParams } from '../js/avatar/rig.js';
+import { resolveShape } from '../js/avatar/handshapes.js';
+import { ARKIT } from '../js/avatar/arkit.js';
+
+const $ = (id) => document.getElementById(id);
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true, preserveDrawingBuffer: true });
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xdfe8ee);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb8c8d0, 1.1));
+const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(0.8, 2.2, 3.2); scene.add(key);
+const cam = new THREE.PerspectiveCamera(30, 1, 0.01, 20);
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+let current = null;
+
+$('go').onclick = () => check($('url').value);
+$('file').onchange = (e) => { const f = e.target.files[0]; if (f) check(URL.createObjectURL(f), f.size, f.name); };
+check($('url').value);
+
+async function check(url, knownSize, label) {
+  $('verdict').textContent = 'A verificar…'; $('table').innerHTML = ''; $('shots').innerHTML = '';
+  const t0 = performance.now();
+  let size = knownSize;
+  if (!size) { try { const r = await fetch(url, { method: 'HEAD' }); size = +r.headers.get('content-length') || 0; } catch { size = 0; } }
+  let gltf;
+  try { gltf = await loader.loadAsync(url); } catch (e) { $('verdict').innerHTML = `<span class="bad">Não foi possível abrir o modelo.</span>`; row('Erro', e.message); return; }
+  const loadMs = performance.now() - t0;
+  if (current) scene.remove(current.group);
+  // estatísticas
+  let tris = 0, meshes = 0, bones = 0; const textures = new Map(); const morphs = new Set();
+  gltf.scene.traverse((o) => {
+    if (o.isBone) bones++;
+    if (o.isMesh) { meshes++; const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+      if (o.morphTargetDictionary) Object.keys(o.morphTargetDictionary).forEach((n) => morphs.add(n));
+      for (const m of [].concat(o.material)) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap']) { const t = m?.[k]; if (t?.image) textures.set(t.uuid, Math.max(t.image.width || 0, t.image.height || 0)); } }
+  });
+  const rig = buildRig(gltf.scene);
+  const lower = new Set([...morphs].map((n) => n.toLowerCase()));
+  const arkitFound = ARKIT.filter((n) => lower.has(n.toLowerCase()));
+  const missing = ARKIT.filter((n) => !lower.has(n.toLowerCase()));
+  const maxTex = Math.max(0, ...textures.values());
+  const mb = size / 1e6;
+
+  const flag = (ok, warn) => (ok ? '<span class="ok">✓</span>' : warn ? '<span class="warn">⚠</span>' : '<span class="bad">✗</span>');
+  row('Modelo', label || url);
+  row('Tamanho do ficheiro', `${flag(mb > 0 && mb <= 15, mb <= 30)} ${mb ? mb.toFixed(1) + ' MB' : 'desconhecido'} <small>(telemóvel: até 15 MB)</small>`);
+  row('Triângulos', `${flag(tris <= 120000, tris <= 250000)} ${Math.round(tris).toLocaleString('pt-PT')} <small>(telemóvel: até 120 mil)</small>`);
+  row('Texturas', `${flag(maxTex <= 2048, maxTex <= 4096)} ${textures.size}, maior ${maxTex}px`);
+  row('Malhas / ossos', `${meshes} / ${bones}`);
+  row('Braços, mãos e dedos para sinais', rig ? '<span class="ok">✓ prontos</span>' : '<span class="bad">✗ faltam ossos dos braços ou dedos</span>');
+  if (rig) row('Pontas dos dedos', [...rig.R.tips, rig.R.thumbTip].every(Boolean) ? '<span class="ok">✓</span>' : '<span class="warn">⚠ sem ossos de ponta (o polegar fica menos preciso)</span>');
+  row('Expressões ARKit', `${flag(arkitFound.length === 52, arkitFound.length >= 20)} ${arkitFound.length} de 52` + (missing.length && missing.length < 52 ? `<br><small>faltam: ${missing.slice(0, 12).join(', ')}${missing.length > 12 ? '…' : ''}</small>` : ''));
+  row('Visemas (boca)', [...lower].some((n) => n.startsWith('viseme_')) ? '<span class="ok">✓</span>' : 'não (usa jawOpen/mouthFunnel/mouthPucker)');
+  row('Tempo de carregamento aqui', Math.round(loadMs) + ' ms');
+
+  if (!rig) { $('verdict').innerHTML = '<span class="bad">Não serve para a Inclui+ (sem esqueleto de mãos).</span>'; return; }
+  current = rig; scene.add(rig.group);
+  // poses de teste
+  const shots = [['Corpo', null, 'full'], ['Letra A', 'A'], ['Letra L', 'L'], ['Letra V', 'V'], ['Letra O', 'O', 'hand', 'in'], ['Letra B', 'flat']];
+  for (const [label, hs, view = 'hand', palm = 'fwd'] of shots) shot(label, rig, hs, view, palm);
+  const face = (w) => { gltf.scene.traverse((o) => { if (o.morphTargetDictionary) for (const [n, i] of Object.entries(o.morphTargetDictionary)) o.morphTargetInfluences[i] = w[n.toLowerCase()] || 0; }); };
+  if (arkitFound.length) {
+    for (const [label, w] of [['Sorriso', { mouthsmileleft: 1, mouthsmileright: 1, cheeksquintleft: 0.5, cheeksquintright: 0.5 }], ['Boca aberta', { jawopen: 0.8 }], ['Piscar', { eyeblinkleft: 1, eyeblinkright: 1 }], ['Pergunta', { browinnerup: 1, browouterupleft: 0.8, browouterupright: 0.8, eyewideleft: 0.4, eyewideright: 0.4 }]]) {
+      face(w); shot(label, rig, null, 'face');
+    }
+    face({});
+  }
+  // desempenho de desenho
+  const gl = renderer.getContext(), px = new Uint8Array(4); let frames = 0; const t1 = performance.now();
+  while (performance.now() - t1 < 700) { renderer.render(scene, cam); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); frames++; } // readPixels obriga a esperar pela GPU
+  const fps = Math.min(240, frames / 0.7);
+  row('Desenho neste dispositivo', `${flag(fps >= 45, fps >= 25)} ~${Math.round(fps)} fps (estimativa)`);
+  const ok = rig && arkitFound.length >= 20 && (mb === 0 || mb <= 15) && tris <= 120000;
+  $('verdict').innerHTML = ok ? '<span class="ok">✓ Pronto para a Inclui+ (computador e telemóvel)</span>'
+    : rig && arkitFound.length ? '<span class="warn">⚠ Funciona, mas precisa de otimização para telemóvel</span>'
+    : '<span class="warn">⚠ Funciona para sinais, mas sem expressões faciais</span>';
+}
+function row(k, v) { $('table').insertAdjacentHTML('beforeend', `<tr><td>${k}</td><td>${v}</td></tr>`); }
+function shot(label, rig, hs, view, palm = 'fwd') {
+  for (const [a, spec] of [[rig.R, hs ? { p: [-0.15, 1.36, 0.32], f: 'up', palm, hs } : null], [rig.L, null]]) {
+    const s = spec || { p: [a.s * 0.215, 0.935, 0.07], f: 'down', palm: 'in', hs: 'relax' };
+    a.cur.p.copy(toWorld(rig, s.p)); a.cur.q.copy(frameQuat(dirV(s.f, a.s), dirV(s.palm, a.s))); a.cur.shape = resolveShape(a, s.hs, thumbParams);
+    solveArm(rig, a);
+  }
+  const hp = rig.R.hand.getWorldPosition(new THREE.Vector3());
+  if (view === 'hand') { cam.position.set(hp.x + 0.08, hp.y + 0.08, hp.z + 0.5); cam.lookAt(hp.x, hp.y + 0.07, hp.z); }
+  else if (view === 'face') { cam.position.set(0, rig.headY + 0.05, 0.75); cam.lookAt(0, rig.headY + 0.03, 0); }
+  else { cam.position.set(0, 0.95, 3.6); cam.lookAt(0, 0.92, 0); }
+  renderer.render(scene, cam);
+  $('shots').insertAdjacentHTML('beforeend', `<figure><img alt="${label}" src="${$('c').toDataURL('image/jpeg', 0.85)}"><figcaption>${label}</figcaption></figure>`);
+}
+window.check = check;
+</script>
+</body>
+</html>

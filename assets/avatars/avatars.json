@@ -1,0 +1,643 @@
+{
+ "_doc": "Catálogo de modelos 3D. 'realistic' = pessoas digitalizadas (pele e cabelo verdadeiros; fixedOutfit = já vestidas). 'standard' = ilustrados, com tom de pele à escolha. group = secção do camarim; fits = profissões a que a roupa serve; skinTones = tons de pele escolhidos automaticamente.",
+ "models": [
+  {
+   "id": "rb-empresaria",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Amina",
+   "desc": "Executiva",
+   "group": "escritorio",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/empresaria.glb",
+    "mobile": "realistic/empresaria.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "escuro",
+    "muito-escuro",
+    "medio"
+   ],
+   "fits": [
+    "executivo",
+    "atendimento",
+    "professor",
+    "bata",
+    "enfermagem"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-empresario",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Bilar",
+   "desc": "Executivo",
+   "group": "escritorio",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/empresario.glb",
+    "mobile": "realistic/empresario.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "executivo",
+    "professor",
+    "bata"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-homem",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Tomás",
+   "desc": "Casaco de ganga",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/homem.glb",
+    "mobile": "realistic/homem.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "atendimento",
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m04",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Jaime",
+   "desc": "Camisola e capuz",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/m04.glb",
+    "mobile": "realistic/m04.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m18",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Celso",
+   "desc": "Capuz cinzento",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/m18.glb",
+    "mobile": "realistic/m18.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-fp02",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Luana",
+   "desc": "Cabelo crespo, vestido",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/fp02.glb",
+    "mobile": "realistic/fp02.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "escuro",
+    "muito-escuro",
+    "medio"
+   ],
+   "fits": [
+    "casual",
+    "atendimento"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m17",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Dino",
+   "desc": "Boné e casaco azul",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/m17.glb",
+    "mobile": "realistic/m17.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio",
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m15",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Abdul",
+   "desc": "Barrete e túnica",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/m15.glb",
+    "mobile": "realistic/m15.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio",
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-f10",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Zainabo",
+   "desc": "Lenço preto",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/f10.glb",
+    "mobile": "realistic/f10.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio",
+    "escuro",
+    "muito-escuro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-f11",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Graça",
+   "desc": "Camisola castanha",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/f11.glb",
+    "mobile": "realistic/f11.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m10",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Rui",
+   "desc": "Casaco desportivo",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/m10.glb",
+    "mobile": "realistic/m10.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-medica",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Mei",
+   "desc": "Médica",
+   "group": "saude",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/medica.glb",
+    "mobile": "realistic/medica.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio",
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "bata",
+    "enfermagem"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-medf02",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Ana",
+   "desc": "Médica com estetoscópio",
+   "group": "saude",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/medf02.glb",
+    "mobile": "realistic/medf02.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "bata",
+    "enfermagem"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)",
+   "ownSteto": true
+  },
+  {
+   "id": "rb-medm01",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Paulo",
+   "desc": "Médico",
+   "group": "saude",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/medm01.glb",
+    "mobile": "realistic/medm01.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro",
+    "medio"
+   ],
+   "fits": [
+    "bata",
+    "enfermagem"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-medm03",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Jorge",
+   "desc": "Médico com estetoscópio",
+   "group": "saude",
+   "age": "idoso",
+   "files": {
+    "desktop": "realistic/medm03.glb",
+    "mobile": "realistic/medm03.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "bata"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)",
+   "ownSteto": true
+  },
+  {
+   "id": "rb-f06",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Fátima",
+   "desc": "Lenço branco",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/f06.glb",
+    "mobile": "realistic/f06.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "medio",
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-bm02",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Carlos",
+   "desc": "Fato e gravata",
+   "group": "escritorio",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/bm02.glb",
+    "mobile": "realistic/bm02.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "executivo",
+    "professor"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-bf02",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Helena",
+   "desc": "Casaco e óculos",
+   "group": "escritorio",
+   "age": "idoso",
+   "files": {
+    "desktop": "realistic/bf02.glb",
+    "mobile": "realistic/bf02.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "executivo",
+    "professor"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-f01",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Sofia",
+   "desc": "Camisa rosa",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/f01.glb",
+    "mobile": "realistic/f01.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "casual",
+    "atendimento"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-f03",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Lin",
+   "desc": "Top lilás",
+   "group": "dia",
+   "age": "jovem",
+   "files": {
+    "desktop": "realistic/f03.glb",
+    "mobile": "realistic/f03.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro",
+    "medio"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-f08",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Marta",
+   "desc": "Camisola cinzenta",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/f08.glb",
+    "mobile": "realistic/f08.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-f17",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Teresa",
+   "desc": "Casaco verde",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/f17.glb",
+    "mobile": "realistic/f17.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "casual",
+    "atendimento"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m02",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Pedro",
+   "desc": "Camisola bege",
+   "group": "dia",
+   "age": "adulto",
+   "files": {
+    "desktop": "realistic/m02.glb",
+    "mobile": "realistic/m02.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "rb-m03",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Sr. António",
+   "desc": "Casaco de xadrez",
+   "group": "dia",
+   "age": "idoso",
+   "files": {
+    "desktop": "realistic/m03.glb",
+    "mobile": "realistic/m03.glb"
+   },
+   "skinTint": false,
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "fits": [
+    "casual"
+   ],
+   "fixedOutfit": true,
+   "license": "Microsoft Rocketbox — MIT (uso comercial permitido)"
+  },
+  {
+   "id": "real-f",
+   "kind": "realistic",
+   "gender": "f",
+   "label": "Joana",
+   "files": {
+    "desktop": "realistic/humana.glb",
+    "mobile": "realistic/humana.glb"
+   },
+   "skinTint": false,
+   "license": "Criado com Avaturn (via met4citizen/TalkingHead) — uso não comercial",
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "group": "personalizavel",
+   "desc": "Roupa e cabelo à escolha"
+  },
+  {
+   "id": "real-m",
+   "kind": "realistic",
+   "gender": "m",
+   "label": "Miguel",
+   "files": {
+    "desktop": "realistic/humano.glb",
+    "mobile": "realistic/humano.glb"
+   },
+   "skinTint": false,
+   "license": "Criado com Avatar SDK / MetaPerson (via met4citizen/TalkingHead) — uso não comercial",
+   "skinTones": [
+    "claro",
+    "muito-claro"
+   ],
+   "group": "personalizavel",
+   "desc": "Roupa e cabelo à escolha"
+  },
+  {
+   "id": "std-f",
+   "kind": "standard",
+   "gender": "f",
+   "label": "Ilustrada",
+   "files": {
+    "desktop": "standard/feminino.glb",
+    "mobile": "standard/feminino.glb"
+   },
+   "license": "CC BY-NC 4.0 (Ready Player Me) — demonstração",
+   "group": "personalizavel",
+   "desc": "Qualquer tom de pele, roupa e cabelo"
+  },
+  {
+   "id": "std-m",
+   "kind": "standard",
+   "gender": "m",
+   "label": "Ilustrado",
+   "files": {
+    "desktop": "standard/masculino.glb",
+    "mobile": "standard/masculino.glb"
+   },
+   "license": "Ready Player Me (exemplo Three.js) — demonstração",
+   "group": "personalizavel",
+   "desc": "Qualquer tom de pele, roupa e cabelo"
+  }
+ ]
+}

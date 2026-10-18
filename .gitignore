@@ -1,0 +1,7 @@
+node_modules/
+server/.env
+dist-artifact/
+_site/
+__pycache__/
+*.pyc
+.DS_Store

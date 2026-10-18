@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Inclui+</title>
+  <meta name="description" content="Inclui+ — tradução entre língua de sinais e voz, com intérprete virtual 3D. Bilar DigitalTech Solutions.">
+  <meta name="theme-color" content="#1d3f6e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Inclui+">
+  <link rel="icon" href="assets/icons/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fredoka:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }</script>
+  <script src="assets/firebase-config.js"></script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <!-- Abertura -->
+  <section id="intro" class="intro" aria-label="Boas-vindas">
+    <div class="intro-bg" aria-hidden="true"></div>
+    <header class="intro-top">
+      <h1 class="sr">Inclui+ — Inclusão Global. Aprender, comunicar, incluir.</h1>
+      <img class="intro-logo" src="assets/brand/logo-full.png" alt="Inclui+ · Inclusão Global · Aprender • Comunicar • Incluir">
+      <p class="lead">A ponte entre a voz e a língua de sinais — em hospitais, escolas, empresas e serviços.</p>
+    </header>
+    <div class="intro-bottom">
+      <div class="intro-actions">
+        <button class="btn sun xl" id="startBtn">Começar sem conta</button>
+        <button class="btn ghost xl" id="introLogin">👤 Entrar ou criar conta</button>
+      </div>
+      <div class="intro-links"><button class="install-link strong" id="installBtn">📲 Baixar a aplicação</button><button class="install-link" id="howBtn">Como funciona</button></div>
+      <p class="by">Bilar DigitalTech Solutions · feito em Moçambique para o mundo</p>
+      <div class="install-bar" id="installBar" hidden><span>📲 <b>Baixe a Inclui+</b> para o telemóvel — abre como uma aplicação e funciona sem internet.</span><button class="btn sun" id="installBarGo">Baixar</button><button class="x" id="installBarX" aria-label="Agora não">✕</button></div>
+    </div>
+  </section>
+
+  <!-- Como funciona: ecrãs que se deslizam -->
+  <section id="tour" class="tour" aria-label="Como funciona" hidden>
+    <button class="tour-skip" id="tourSkip">Saltar</button>
+    <div class="tour-track" id="tourTrack">
+      <article class="tour-slide">
+        <div class="tour-art">🗣️<span>➜</span>🤟</div>
+        <h2>O ouvinte fala.<br>O intérprete faz os sinais.</h2>
+        <p>O médico, o professor ou o atendente fala ou escreve. O intérprete 3D traduz em língua de sinais, com mãos, rosto e expressão.</p>
+      </article>
+      <article class="tour-slide">
+        <div class="tour-art">🤟<span>➜</span>🔊</div>
+        <h2>A pessoa surda gesticula.<br>A Inclui+ fala por ela.</h2>
+        <p>A câmara reconhece os gestos e as letras do alfabeto manual. A aplicação escreve e diz em voz alta.</p>
+      </article>
+      <article class="tour-slide">
+        <div class="tour-art">🎓</div>
+        <h2>Um professor virtual<br>que responde.</h2>
+        <p>O aluno pergunta por voz ou por escrito. O professor responde com voz, expressão e sinais.</p>
+      </article>
+      <article class="tour-slide">
+        <div class="tour-art">🦯 💬 🧓</div>
+        <h2>Para todos os que ficam de fora.</h2>
+        <p>Pessoas cegas ouvem onde estão e o que está à frente. Quem não fala usa cartões que falam. Texto grande e alto contraste para quem vê mal.</p>
+      </article>
+      <article class="tour-slide">
+        <div class="tour-art">🏥 🏫 🏢 🛎️</div>
+        <h2>Médico, professor,<br>empresário, atendente.</h2>
+        <p>Cada local tem o seu intérprete, com farda, nome e aparência à sua escolha: pele, idade, corpo e roupa.</p>
+      </article>
+    </div>
+    <div class="tour-foot">
+      <div class="tour-dots" id="tourDots"></div>
+      <button class="btn sun xl" id="tourNext">Seguinte</button>
+    </div>
+  </section>
+
+  <!-- Quem vai usar -->
+  <dialog class="sheet" id="whoSheet" aria-labelledby="whoTitle">
+    <div class="sh-head"><h2 id="whoTitle">Quem vai usar a Inclui+?</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body"><div class="profiles" id="profiles">
+      <button class="profile" data-u="pro"><span>🗣️</span><b>Falo com pessoas surdas</b><small>Médico, professor, empresa, atendimento. Eu falo, o intérprete faz os sinais.</small></button>
+      <button class="profile" data-u="deaf"><span>🤟</span><b>Sou surdo</b><small>Faço gestos para a câmara e a Inclui+ fala por mim.</small></button>
+      <button class="profile" data-u="captions"><span>👂</span><b>Ouço mal / quero legendas</b><small>Legendas ao vivo de tudo o que se diz, e alerta de sons fortes.</small></button>
+      <button class="profile" data-u="blind"><span>🦯</span><b>Sou cego ou vejo mal</b><small>Tudo em voz: onde estou, o que está à frente, ler textos, pedir ajuda.</small></button>
+      <button class="profile" data-u="aac"><span>💬</span><b>Não consigo falar</b><small>Cartões com imagens que falam por mim. Para mudez, autismo, AVC ou quem não lê.</small></button>
+      <button class="profile" data-u="learn"><span>📖</span><b>Quero aprender sinais</b><small>Sinais, alfabeto manual, números e professor virtual.</small></button>
+    </div></div>
+  </dialog>
+
+  <!-- Orientação para pessoas cegas (ecrã inteiro, botões enormes, tudo em voz) -->
+  <section id="blind" class="blind" aria-label="Orientação para pessoas cegas" hidden>
+    <header class="b-head"><b>Inclui<span>+</span> · Orientação</b><button data-b="exit" aria-label="Sair da orientação">Sair</button></header>
+    <p class="b-status" aria-live="assertive">Toque num botão. Tudo é dito em voz alta.</p>
+    <div class="b-cam" hidden><video id="blindVideo" playsinline muted></video></div>
+    <div class="b-grid">
+      <button data-b="where"><span>📍</span><b>Onde estou?</b></button>
+      <button data-b="ahead"><span>👁️</span><b>O que está à minha frente?</b></button>
+      <button data-b="read"><span>📄</span><b>Ler texto</b></button>
+      <button data-b="voice"><span>🎙️</span><b>Comando por voz</b></button>
+      <button data-b="help" class="b-help"><span>🆘</span><b>Pedir ajuda</b></button>
+    </div>
+    <div class="help-screen" hidden role="alertdialog" aria-label="Pedido de ajuda"><b>PRECISO DE AJUDA</b><span>Sou uma pessoa cega. Pode ajudar-me, por favor?</span><small>Toque para fechar</small></div>
+  </section>
+
+  <!-- Legendas ao vivo (pessoas surdas) -->
+  <section id="captions" class="captions" aria-label="Legendas ao vivo" hidden>
+    <header class="cap-head"><b>Legendas ao vivo <span class="cap-live" hidden>● ao vivo</span></b>
+      <div class="cap-tools"><button data-c="smaller" aria-label="Letra mais pequena">A−</button><button data-c="bigger" aria-label="Letra maior">A+</button><button data-c="exit">Sair</button></div></header>
+    <div class="cap-text" aria-live="polite"></div>
+    <form class="say cap-reply" data-c="reply"><input data-c="replyIn" autocomplete="off" placeholder="Escreva a resposta e a Inclui+ diz em voz alta…" aria-label="Resposta escrita"><button class="btn sun" type="submit">🔊 Dizer</button></form>
+    <div class="row"><button class="btn" data-c="pause">⏸ Pausa</button><button class="btn" data-c="clear">Limpar</button></div>
+  </section>
+
+  <!-- Alerta de sons (pessoas surdas) -->
+  <section id="sounds" class="sounds" aria-label="Alerta de sons" hidden>
+    <header class="cap-head"><b>Alerta de sons</b><div class="cap-tools"><button data-s="exit">Sair</button></div></header>
+    <div class="snd-big">🔔</div>
+    <p class="snd-state">Desligado</p>
+    <div class="snd-meter"><i></i></div>
+    <label class="field">Sensibilidade<input type="range" data-s="sens" min="1" max="10" value="6"></label>
+    <button class="btn sun xl" data-s="toggle">▶ Começar a escutar</button>
+    <p class="note">Quando houver um som forte — campainha, alarme, buzina, alguém a chamar — o ecrã pisca e o telemóvel vibra. Deixe esta página aberta.</p>
+    <ul class="snd-log"></ul>
+  </section>
+
+  <!-- Escolha do local -->
+  <dialog class="sheet" id="placeSheet" aria-labelledby="placeTitle">
+    <div class="sh-head"><h2 id="placeTitle">Onde vai usar a Inclui+?</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body"><div class="places" id="places"></div></div>
+  </dialog>
+
+  <!-- Aplicação -->
+  <div class="app" id="app" hidden>
+    <header class="bar">
+      <img class="bar-logo" src="assets/brand/badge.png" alt="">
+      <b class="bar-name">Inclui<span>+</span></b>
+      <button class="chip" id="placeChip" aria-label="Mudar de local"></button>
+      <button class="chip" id="langChip" aria-label="Mudar a língua de sinais"></button>
+      <button class="iconbtn" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </header>
+
+    <main class="stagewrap">
+      <div class="stage" id="stage">
+        <canvas id="avatarCanvas" aria-label="Intérprete virtual em 3D. Arraste para rodar; aproxime com dois dedos."></canvas>
+        <div class="loading" id="loading"><div class="spin"></div><b>A preparar o intérprete…</b></div>
+        <div class="who" id="who" role="button" tabindex="0" title="Escolher o intérprete no camarim"><span class="who-ico" id="whoIco">🩺</span><span><b id="whoName">—</b><small id="whoRole"></small></span></div>
+        <button class="pill-btn" id="frameBtn">Ver mãos de perto</button>
+        <div class="listening" id="listening" hidden><i></i>A ouvir…</div>
+        <div class="letter" id="letter" aria-hidden="true"></div>
+        <div class="sub" aria-live="polite"><div id="sub"></div></div>
+        <div class="pip rec" id="recPip" hidden>
+          <video id="recVideo" playsinline muted></video>
+          <canvas id="recOverlay"></canvas>
+        </div>
+        <div class="pip" id="pip" hidden>
+          <video id="video" playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div class="pip-state" id="camState">Câmara desligada</div>
+          <div class="pip-hold"><i id="hold"></i></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="dock">
+      <div class="modes" role="tablist" aria-label="Quem comunica">
+        <button role="tab" id="tabHear" aria-selected="true">🎙️ Ouvinte fala</button>
+        <button role="tab" id="tabDeaf" aria-selected="false">✋ Surdo gesticula</button>
+        <button role="tab" id="tabAsk" aria-selected="false">🎓 Perguntar</button>
+        <button role="tab" id="tabCards" aria-selected="false">💬 Cartões</button>
+      </div>
+
+      <div class="panel" id="panelHear">
+        <form class="say" id="sayForm">
+          <button type="button" class="mic" id="micBtn" aria-label="Falar"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <label class="sr" for="sayInput">Escrever para traduzir</label>
+          <input id="sayInput" autocomplete="off" enterkeyhint="send" placeholder="Fale ou escreva…">
+          <button class="btn ink" type="submit">Traduzir</button>
+        </form>
+        <div class="chips" id="phrases"></div>
+      </div>
+
+      <div class="panel" id="panelAsk" hidden>
+        <form class="say" id="askForm">
+          <button type="button" class="mic" id="askMic" aria-label="Perguntar por voz"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <label class="sr" for="askInput">Pergunta ao professor virtual</label>
+          <input id="askInput" autocomplete="off" enterkeyhint="send" placeholder="Pergunte ao professor… ex.: O que é a fotossíntese?">
+          <button class="btn ink" type="submit" id="askBtn">Perguntar</button>
+        </form>
+        <p class="answer" id="answer" aria-live="polite"><span class="ph">O professor virtual responde com voz, expressão e língua de sinais.</span></p>
+      </div>
+
+      <div class="panel aac" id="panelCards" hidden></div>
+
+      <div class="panel teach" id="panelTeach" hidden>
+        <div class="teach-head"><b>🎥 Gravar sinais <span id="teachLang"></span></b><button class="x" id="teachClose" aria-label="Fechar o gravador">✕</button></div>
+        <div class="row">
+          <div class="seg" role="group" aria-label="Modo de gravação">
+            <button id="recAuto" aria-pressed="true">Automático</button>
+            <button id="recManual" aria-pressed="false">Manual</button>
+          </div>
+          <button class="btn sun" id="recGo">● Gravar</button>
+          <button class="btn" id="mySignsBtn">Os meus sinais</button>
+        </div>
+        <label class="sr" for="recWords">Palavras a gravar</label>
+        <input id="recWords" class="rec-words" autocomplete="off" placeholder="Palavras a gravar, separadas por vírgulas. Ex.: bom dia, febre, obrigado">
+        <p class="rec-state" id="recState" aria-live="polite">Escreva as palavras e carregue em Gravar.</p>
+        <div class="takes" id="takes"></div>
+      </div>
+
+      <div class="panel" id="panelDeaf" hidden>
+        <p class="heard" id="heard" aria-live="polite"><span class="ph">O que a pessoa surda disser aparece aqui.</span></p>
+        <div class="row">
+          <button class="btn sea" id="camBtn">📷 Ligar câmara</button>
+          <div class="seg" role="group" aria-label="O que reconhecer">
+            <button id="mWords" aria-pressed="true">Gestos</button>
+            <button id="mLetters" aria-pressed="false">Letras</button>
+            <button id="mPhrases" aria-pressed="false">Frases</button>
+          </div>
+          <button class="btn" id="sayBack" aria-label="Repetir em voz alta">🔈</button>
+          <button class="btn" id="clearHeard">Limpar</button>
+          <button class="btn" id="writeBtn" aria-label="Escrever">⌨️</button>
+        </div>
+        <form class="say" id="writeForm" hidden>
+          <label class="sr" for="writeInput">A pessoa surda escreve</label>
+          <input id="writeInput" autocomplete="off" placeholder="Escreva a resposta…">
+          <button class="btn ink" type="submit">Dizer</button>
+        </form>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Menu -->
+  <dialog class="sheet" id="menuSheet" aria-labelledby="menuTitle">
+    <div class="sh-head"><h2 id="menuTitle">Menu</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body">
+      <div class="tiles">
+        <button class="tile" data-open="accountSheet"><span>👤</span><b id="accTileName">Conta</b><small id="accTileSub">Entrar ou criar conta</small></button>
+        <button class="tile" data-open="teach"><span>🎥</span><b>Gravar sinais</b><small>Ensine sinais novos ao intérprete</small></button>
+        <button class="tile" data-open="reviewSheet" id="reviewTile" hidden><span>✅</span><b>Ajudar a validar</b><small>Vote nos sinais gravados por outros</small></button>
+        <button class="tile" data-open="camarimSheet"><span>🎭</span><b>Camarim</b><small>Escolher a pessoa: 28 intérpretes</small></button>
+        <button class="tile" data-open="studioSheet"><span>🧑🏾‍⚕️</span><b>Estúdio do avatar</b><small>Nome, pele, idade, corpo, farda</small></button>
+        <button class="tile" data-open="learnSheet"><span>📖</span><b>Aprender</b><small>Sinais, alfabeto e números</small></button>
+        <button class="tile" data-open="langSheet"><span>🌍</span><b>Língua de sinais</b><small>Moçambique, Brasil, EUA…</small></button>
+        <button class="tile" data-open="placeSheet"><span>📍</span><b>Local</b><small>Hospital, escola, empresa</small></button>
+        <button class="tile" data-open="logSheet"><span>💬</span><b>Conversa</b><small>Registo com hora</small></button>
+        <button class="tile" data-open="gestSheet"><span>✋</span><b>Gestos</b><small>Ver e ensinar gestos</small></button>
+        <button class="tile" data-open="setSheet"><span>⚙️</span><b>Definições</b><small>Voz, texto, contraste</small></button>
+        <button class="tile" data-open="blind"><span>🦯</span><b>Orientação para cegos</b><small>Onde estou, o que está à frente, ler</small></button>
+        <button class="tile" data-open="cards"><span>🗨️</span><b>Cartões que falam</b><small>Para quem não consegue falar</small></button>
+        <button class="tile" data-open="captions"><span>💬</span><b>Legendas ao vivo</b><small>Tudo o que se diz, em letras grandes</small></button>
+        <button class="tile" data-open="sounds"><span>🔔</span><b>Alerta de sons</b><small>Campainha, alarme: pisca e vibra</small></button>
+        <button class="tile" data-open="install" id="installTile" hidden><span>📲</span><b>Instalar no telemóvel</b><small>Ícone no ecrã, funciona sem internet</small></button>
+        <button class="tile" data-open="whoSheet"><span>👥</span><b>Quem usa</b><small>Mudar o perfil</small></button>
+        <button class="tile" data-open="tour"><span>✨</span><b>Como funciona</b><small>Apresentação</small></button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="sheet" id="installSheet" aria-labelledby="installTitle">
+    <div class="sh-head"><h2 id="installTitle">Baixar a Inclui+</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="installHelp"></div>
+  </dialog>
+
+  <dialog class="sheet" id="camarimSheet" aria-labelledby="camarimTitle">
+    <div class="sh-head"><h2 id="camarimTitle">Camarim · escolha o intérprete</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="camarim"></div>
+  </dialog>
+
+  <dialog class="sheet" id="studioSheet" aria-labelledby="studioTitle">
+    <div class="sh-head"><h2 id="studioTitle">Estúdio do avatar</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="studio"></div>
+  </dialog>
+
+  <dialog class="sheet" id="learnSheet" aria-labelledby="learnTitle">
+    <div class="sh-head"><h2 id="learnTitle">Aprender</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="learn"></div>
+  </dialog>
+
+  <dialog class="sheet" id="langSheet" aria-labelledby="langTitle">
+    <div class="sh-head"><h2 id="langTitle">Língua de sinais</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="langs"></div>
+  </dialog>
+
+  <dialog class="sheet" id="logSheet" aria-labelledby="logTitle">
+    <div class="sh-head"><h2 id="logTitle">Conversa</h2><button class="btn" id="logShare">Partilhar</button><button class="btn" id="logClear">Limpar</button><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="log"></div>
+  </dialog>
+
+  <dialog class="sheet" id="accountSheet" aria-labelledby="accTitle">
+    <div class="sh-head"><h2 id="accTitle">Conta</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="account"></div>
+  </dialog>
+
+  <dialog class="sheet" id="mySignsSheet" aria-labelledby="mySignsTitle">
+    <div class="sh-head"><h2 id="mySignsTitle">Os meus sinais</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="mySigns"></div>
+  </dialog>
+
+  <dialog class="sheet" id="reviewSheet" aria-labelledby="reviewTitle">
+    <div class="sh-head"><h2 id="reviewTitle">Ajudar a validar</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="review"></div>
+  </dialog>
+
+  <dialog class="sheet" id="gestSheet" aria-labelledby="gestTitle">
+    <div class="sh-head"><h2 id="gestTitle">Gestos</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body" id="gestures"></div>
+  </dialog>
+
+  <dialog class="sheet" id="setSheet" aria-labelledby="setTitle">
+    <div class="sh-head"><h2 id="setTitle">Definições</h2><button class="x" data-close aria-label="Fechar">✕</button></div>
+    <div class="sh-body">
+      <label class="toggle">Ler em voz alta o que o ouvinte diz <input type="checkbox" id="optRead"></label>
+      <label class="toggle">Vibrar quando chega mensagem <input type="checkbox" id="optVib"></label>
+      <label class="toggle">Texto grande <input type="checkbox" id="optBig"></label>
+      <label class="toggle">Alto contraste <input type="checkbox" id="optHc"></label>
+      <div class="field"><label for="optSpeed">Velocidade dos sinais</label><input type="range" id="optSpeed" min="0.6" max="1.5" step="0.1"></div>
+      <div class="cloud" id="cloudBox">
+        <h3>Conta e nuvem</h3>
+        <p class="cloud-state" id="cloudState">…</p>
+        <button class="btn sea" id="cloudAccount">Abrir a conta</button>
+        <label class="toggle">Guardar o meu ambiente na nuvem (perfil, intérpretes, sinais) <input type="checkbox" id="optSync"></label>
+        <label class="toggle">Partilhar os sinais que gravo com a comunidade <input type="checkbox" id="optContrib"></label>
+        <label class="toggle">Guardar as conversas na nuvem <input type="checkbox" id="optConv"></label>
+        <p class="note">A conta é opcional. Com ou sem conta, os sinais partilhados vão para a base comum e, depois de validados pela comunidade, ficam disponíveis para todos. A conta guarda o seu ambiente para qualquer telemóvel. As conversas podem ter informação de saúde: só são guardadas se ligar a opção.</p>
+      </div>
+      <div class="note"><b>Inclui+</b> · versão 3.0 · Bilar DigitalTech Solutions<br>Avatares 3D com licença de uso não comercial (demonstração).</div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
