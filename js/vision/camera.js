@@ -26,6 +26,13 @@ export class DeafCamera {
     this.ctx = overlay.getContext('2d');
     this.on = false; this.mode = 'words'; this.letters = []; this.custom = []; this.meanings = {};
     this.cand = null; this.hold = 0; this.last = ''; this.lastAt = 0; this.lostAt = 0;
+    this.lastFrameStamp = -1; this.lastInference = 0; this.inferenceBusy = false; this.latestResult = null;
+    this.metrics = { processedFrames: 0, droppedFrames: 0, inferenceErrors: 0, captureToResultMs: 0, resultToUiMs: 0, totalLatencyMs: 0, fps: 0, lastFrameAt: 0, lastResultAt: 0, lastUiAt: 0, lastDecision: null };
+    this.pendingFrame = null;
+    if (typeof window !== 'undefined') {
+      window.__INCLUI_METRICS__ = window.__INCLUI_METRICS__ || {};
+      window.__INCLUI_METRICS__.camera = this.metrics;
+    }
   }
   setSamples(letters, custom) { this.letters = letters; this.custom = custom; }
 
@@ -45,8 +52,15 @@ export class DeafCamera {
     this.on = true;
     this.onStatus('A preparar o reconhecimento… (só demora na primeira vez)', 'busy');
     const slow = setTimeout(() => this.on && !this.rec && this.onStatus('A internet está lenta. A câmara já está ligada; o reconhecimento chega em breve.', 'busy'), 12000);
-    try { this.rec = await loadRecognizer(); clearTimeout(slow); this.onStatus('Mostre a mão à câmara', 'live'); this.loop(); }
-    catch (e) { clearTimeout(slow); this.onStatus('Não foi possível descarregar o reconhecimento. Verifique a internet e tente outra vez.', 'error'); }
+    try {
+      this.rec = await loadRecognizer();
+      clearTimeout(slow);
+      this.onStatus('Mostre a mão à câmara', 'live');
+      this.loop();
+    } catch (e) {
+      clearTimeout(slow);
+      this.onStatus('Não foi possível descarregar o reconhecimento. Verifique a internet e tente outra vez.', 'error');
+    }
   }
   stop() {
     this.on = false; this.video.srcObject?.getTracks().forEach((t) => t.stop()); this.video.srcObject = null;
@@ -56,14 +70,55 @@ export class DeafCamera {
   loop() {
     if (!this.on) return;
     const v = this.video;
-    if (v.videoWidth && v.currentTime !== this.lastT) {
-      this.lastT = v.currentTime;
-      const res = this.rec.recognizeForVideo(v, performance.now());
-      this.draw(res.landmarks || []);
-      const lm = res.landmarks?.[0];
-      if (lm) this.handle(lm, res.gestures?.[0]?.[0]); else this.none();
+    if (!v.videoWidth) return requestAnimationFrame(() => this.loop());
+
+    const now = performance.now();
+    const frameStamp = (v.currentTime || 0) * 1000;
+    if (frameStamp <= this.lastFrameStamp) {
+      this.metrics.droppedFrames = (this.metrics.droppedFrames || 0) + 1;
+      return requestAnimationFrame(() => this.loop());
+    }
+
+    if (this.inferenceBusy || now - this.lastInference < 30) {
+      this.metrics.droppedFrames = (this.metrics.droppedFrames || 0) + 1;
+      return requestAnimationFrame(() => this.loop());
+    }
+
+    this.lastFrameStamp = frameStamp;
+    this.lastInference = now;
+    this.inferenceBusy = true;
+    this.metrics.lastFrameAt = frameStamp;
+    this.pendingFrame = { captureAt: now, frameStamp };
+    try {
+      const result = this.rec?.recognizeForVideo(v, now);
+      this.onResult(result);
+    } catch (error) {
+      this.metrics.inferenceErrors++;
+      this.metrics.lastInferenceError = error?.message || String(error);
+      this.inferenceBusy = false;
+      this.pendingFrame = null;
+      this.onStatus('Falha ao processar a imagem da câmara. Tente desligar e ligar novamente.', 'error');
     }
     requestAnimationFrame(() => this.loop());
+  }
+
+  onResult(result) {
+    this.inferenceBusy = false;
+    this.latestResult = result;
+    const res = result || { landmarks: [], gestures: [] };
+    this.metrics.processedFrames = (this.metrics.processedFrames || 0) + 1;
+    const resultAt = performance.now();
+    if (this.lastResultPerfAt) this.metrics.fps = 1000 / Math.max(1, resultAt - this.lastResultPerfAt);
+    this.lastResultPerfAt = resultAt;
+    if (this.pendingFrame) {
+      const captureToResult = Math.max(0, performance.now() - this.pendingFrame.captureAt);
+      this.metrics.captureToResultMs = captureToResult;
+      this.metrics.lastResultAt = resultAt;
+      this.pendingFrame = null;
+    }
+    this.draw(res.landmarks || []);
+    const lm = res.landmarks?.[0];
+    if (lm) this.handle(lm, res.gestures?.[0]?.[0]); else this.none();
   }
   draw(hands) {
     const o = this.overlay, x = this.ctx; o.width = this.video.videoWidth; o.height = this.video.videoHeight; x.clearRect(0, 0, o.width, o.height);
@@ -81,14 +136,27 @@ export class DeafCamera {
     const own = knn(f, this.custom, 5, 1.1);
     if (own) word = own.label;
     else if (this.mode === 'letters') { const l = knn(f, this.letters, 7, 1.35); if (l) { word = l.label; kind = 'letter'; } }
-    else if (g && g.score > 0.6 && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
+    else if (g && g.score > 0.55 && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
     if (!word && this.mode === 'words' && g?.categoryName === 'Open_Palm') word = this.wave(lm[0].x) ? this.meanings.wave : this.meanings.Open_Palm;
     if (g?.categoryName !== 'Open_Palm') this.wx = [];
     if (word && word === this.cand) this.hold++; else { this.cand = word; this.hold = 0; }
-    const need = kind === 'letter' ? 12 : word === this.meanings.wave ? 1 : 14;
+
+    const fast = Boolean(g && g.score > 0.78) || kind === 'letter';
+    const need = kind === 'letter' ? 5 : word === this.meanings.wave ? 1 : fast ? 3 : 4;
+    const candidateStartedAt = performance.now();
     this.onCandidate(word, word ? Math.min(1, this.hold / need) : 0, kind);
-    const repeat = word === this.last && performance.now() - this.lastAt < (kind === 'letter' ? 1400 : 2500);
-    if (word && this.hold >= need && !repeat) { this.last = word; this.lastAt = performance.now(); this.onCommit(word, kind); this.hold = 0; }
+    const resultToUi = performance.now() - candidateStartedAt;
+    if (this.metrics.lastResultAt) this.metrics.resultToUiMs = resultToUi;
+    const repeat = word === this.last && performance.now() - this.lastAt < (kind === 'letter' ? 1000 : 1500);
+    if (word && (this.hold >= need || (g && g.score > 0.9 && word === this.cand)) && !repeat) {
+      const commitAt = performance.now();
+      this.last = word; this.lastAt = commitAt; this.onCommit(word, kind);
+      this.metrics.lastUiAt = commitAt;
+      this.metrics.resultToUiMs = Math.max(0, commitAt - this.metrics.lastResultAt);
+      this.metrics.totalLatencyMs = this.metrics.captureToResultMs + this.metrics.resultToUiMs;
+      this.metrics.lastDecision = { word, kind, latencyMs: this.metrics.totalLatencyMs, at: commitAt };
+      this.hold = 0;
+    }
   }
   none() {
     this.cand = null; this.hold = 0; this.wx = []; this.onHand?.(false); this.onCandidate(null, 0);

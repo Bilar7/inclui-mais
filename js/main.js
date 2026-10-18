@@ -172,23 +172,83 @@ function signText(text) {
     onLetter: (c) => ($('letter').textContent = c),
   });
 }
-function hearing(t) {
+const streamSignSpans = [];
+const streamSignCallbacks = {
+  onItem: (index) => streamSignSpans.forEach((span, i) => {
+    span.classList.toggle('now', i === index);
+    if (index === -1 || i < index) span.classList.add('done');
+  }),
+  onLetter: (letter) => ($('letter').textContent = letter),
+};
+function appendSignText(text) {
+  const { labels, items } = translate(text, lang());
+  if (!items.length) return;
+  trackEvent('translate', { sl, learned: items.filter((x) => x.learned).length });
+  const offset = streamSignSpans.length;
+  for (const label of labels) {
+    const span = document.createElement('span');
+    span.textContent = `${label} `;
+    streamSignSpans.push(span);
+    $('sub').appendChild(span);
+  }
+  it.enqueue(items.map((item) => ({ ...item, index: item.index + offset })), streamSignCallbacks);
+}
+function hearing(t, { stream = false } = {}) {
   t = t.trim(); if (!t) return;
-  log('h', t); signText(t);
-  if (prefs.read) speak(t, L().speech);
+  log('h', t);
+  if (stream) appendSignText(t); else signText(t);
+  if (prefs.read && !stream) speak(t, L().speech);
   if (prefs.vib) navigator.vibrate?.(60);
 }
 $('sayForm').onsubmit = (e) => { e.preventDefault(); hearing($('sayInput').value); $('sayInput').value = ''; $('sayInput').blur(); };
 let rec = null;
-$('micBtn').onclick = () => {
-  if (rec) { rec.stop(); return; }
-  rec = listen(L().speech, {
-    onStart: () => { $('micBtn').classList.add('on'); $('listening').hidden = false; $('sub').textContent = '…'; },
-    onText: (t) => ($('sub').textContent = t),
-    onFinal: (t) => hearing(t),
-    onError: (err) => toast(err === 'unsupported' ? 'Para falar, use o Google Chrome ou o Edge. Também pode escrever.' : err === 'not-allowed' ? 'Permita o microfone (ícone do cadeado, ao lado do endereço).' : 'Não ouvi bem. Tente outra vez.'),
-    onEnd: () => { rec = null; $('micBtn').classList.remove('on'); $('listening').hidden = true; },
+let micActive = false;
+let micInitialized = false;
+function finishMicUi() {
+  $('micBtn').classList.remove('on');
+  $('listening').hidden = true;
+}
+function startContinuousMic() {
+  const recognition = listen(L().speech, {
+    continuous: true,
+    onStart: () => {
+      if (!micInitialized) {
+        streamSignSpans.length = 0;
+        $('sub').replaceChildren();
+        it.play([], streamSignCallbacks);
+        micInitialized = true;
+      }
+      $('micBtn').classList.add('on');
+      $('listening').hidden = false;
+    },
+    onText: (t) => { $('listening').innerHTML = `<i></i>${esc(t || 'A ouvir…')}`; },
+    onFinal: (t) => hearing(t, { stream: true }),
+    onError: (err) => {
+      if (err === 'no-speech' || err === 'aborted') return;
+      if (['unsupported', 'not-allowed', 'service-not-allowed', 'audio-capture'].includes(err)) micActive = false;
+      toast(err === 'unsupported' ? 'Para falar, use o Google Chrome ou o Edge. Também pode escrever.' : err === 'not-allowed' || err === 'service-not-allowed' ? 'Permita o microfone (ícone do cadeado, ao lado do endereço).' : err === 'audio-capture' ? 'Não foi possível acessar o microfone.' : 'Não ouvi bem. Vou tentar continuar a escuta.');
+    },
+    onEnd: () => {
+      if (rec === recognition) rec = null;
+      if (micActive) {
+        setTimeout(() => { if (micActive && !rec) startContinuousMic(); }, 250);
+        return;
+      }
+      micInitialized = false;
+      finishMicUi();
+    },
   });
+  rec = recognition;
+  if (!recognition) {
+    micActive = false;
+    micInitialized = false;
+    finishMicUi();
+  }
+}
+$('micBtn').onclick = () => {
+  if (micActive) { micActive = false; rec?.stop(); return; }
+  micActive = true;
+  startContinuousMic();
 };
 
 /* ---------- modos ---------- */

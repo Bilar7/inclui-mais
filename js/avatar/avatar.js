@@ -177,6 +177,16 @@ export class Interpreter {
 
   /** Toca uma sequência de sinais. items: [{frames:[{R,L,t,letter}], expr, head, mouth, index, word}] */
   play(items, cb = {}) { this.queue = items.map((x) => ({ ...x })); this.queue.push({ frames: [{ R: null, L: null, t: 0.7 }], end: true }); this.cb = cb; this.next(); }
+  enqueue(items, cb = this.cb || {}) {
+    const added = items.map((x) => ({ ...x }));
+    if (!added.length) return;
+    this.queue ||= [];
+    this.cb = cb;
+    const endIndex = this.queue.findIndex((item) => item.end);
+    if (endIndex >= 0) this.queue.splice(endIndex, 0, ...added);
+    else this.queue.push(...added, { frames: [{ R: null, L: null, t: 0.7 }], end: true });
+    if (!this.playing || this.playing.end) this.next();
+  }
   next() {
     const p = (this.playing = this.queue.shift() || null);
     this.cb?.onItem?.(p ? (p.end ? -1 : p.index) : -1, p);

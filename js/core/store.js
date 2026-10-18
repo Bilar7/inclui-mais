@@ -20,12 +20,33 @@ export function speak(text, lang = 'pt-PT', hooks = {}) {
 }
 
 /** Reconhecimento de fala (Chrome / Edge / Android). */
-export function listen(lang, { onText, onFinal, onStart, onEnd, onError }) {
+export function listen(lang, { onText, onFinal, onStart, onEnd, onError, continuous = false }) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { onError?.('unsupported'); return null; }
-  const r = new SR(); r.lang = lang; r.interimResults = true; r.continuous = false;
+  const r = new SR(); r.lang = lang; r.interimResults = true; r.continuous = continuous;
+  const finalized = new Set();
+  let oneShotFinal = false;
   r.onstart = () => onStart?.();
-  r.onresult = (e) => { let t = '', fin = false; for (const x of e.results) { t += x[0].transcript; fin = x.isFinal; } onText?.(t); if (fin) onFinal?.(t); };
+  r.onresult = (e) => {
+    let transcript = '';
+    const newFinals = [];
+    for (let i = 0; i < e.results.length; i++) {
+      const result = e.results[i];
+      const text = result[0].transcript;
+      if (transcript && text && !/\s$/.test(transcript) && !/^[,.;!?]/.test(text)) transcript += ' ';
+      transcript += text;
+      if (result.isFinal && !finalized.has(i)) {
+        finalized.add(i);
+        newFinals.push(text);
+      }
+    }
+    onText?.(transcript);
+    if (continuous) newFinals.forEach((text) => onFinal?.(text));
+    else if (!oneShotFinal && e.results.length && e.results[e.results.length - 1].isFinal) {
+      oneShotFinal = true;
+      onFinal?.(transcript);
+    }
+  };
   r.onerror = (e) => onError?.(e.error);
   r.onend = () => onEnd?.();
   r.start(); return r;
