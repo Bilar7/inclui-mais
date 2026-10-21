@@ -219,9 +219,9 @@ function startContinuousMic() {
         micInitialized = true;
       }
       $('micBtn').classList.add('on');
+      $('listening').innerHTML = '<i></i>A ouvir…';
       $('listening').hidden = false;
     },
-    onText: (t) => { $('listening').innerHTML = `<i></i>${esc(t || 'A ouvir…')}`; },
     onFinal: (t) => hearing(t, { stream: true }),
     onError: (err) => {
       if (err === 'no-speech' || err === 'aborted') return;
