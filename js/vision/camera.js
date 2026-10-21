@@ -12,7 +12,14 @@ function loadRecognizer() {
   recognizerPromise = (async () => {
     const { FilesetResolver, GestureRecognizer } = await import(`${VISION}/vision_bundle.mjs`);
     const fs = await FilesetResolver.forVisionTasks(`${VISION}/wasm`);
-    const opts = (d) => ({ baseOptions: { modelAssetPath: MODEL, delegate: d }, runningMode: 'VIDEO', numHands: 1 });
+    const opts = (d) => ({
+      baseOptions: { modelAssetPath: MODEL, delegate: d },
+      runningMode: 'VIDEO',
+      numHands: 1,
+      minHandDetectionConfidence: 0.45,
+      minHandPresenceConfidence: 0.45,
+      minTrackingConfidence: 0.45,
+    });
     try { return await GestureRecognizer.createFromOptions(fs, opts('GPU')); }
     catch { return await GestureRecognizer.createFromOptions(fs, opts('CPU')); }
   })();
@@ -39,7 +46,15 @@ export class DeafCamera {
   async start() {
     this.onStatus('A ligar a câmara…', 'busy');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 480, max: 640 },
+          height: { ideal: 360, max: 480 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: false,
+      });
       this.video.srcObject = stream; await this.video.play();
     } catch (e) {
       const msg = e.name === 'NotAllowedError' ? 'Permita o acesso à câmara (ícone do cadeado, ao lado do endereço).'
@@ -67,21 +82,32 @@ export class DeafCamera {
     this.ctx.clearRect(0, 0, this.overlay.width, this.overlay.height); this.onStatus('Câmara desligada', 'off');
   }
 
+  scheduleLoop() {
+    if (!this.on) return;
+    if (typeof this.video.requestVideoFrameCallback === 'function') this.video.requestVideoFrameCallback(() => this.loop());
+    else if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => this.loop());
+  }
+
   loop() {
     if (!this.on) return;
     const v = this.video;
-    if (!v.videoWidth) return requestAnimationFrame(() => this.loop());
+    if (!v.videoWidth) {
+      this.scheduleLoop();
+      return;
+    }
 
     const now = performance.now();
     const frameStamp = (v.currentTime || 0) * 1000;
     if (frameStamp <= this.lastFrameStamp) {
       this.metrics.droppedFrames = (this.metrics.droppedFrames || 0) + 1;
-      return requestAnimationFrame(() => this.loop());
+      this.scheduleLoop();
+      return;
     }
 
-    if (this.inferenceBusy || now - this.lastInference < 30) {
+    if (this.inferenceBusy) {
       this.metrics.droppedFrames = (this.metrics.droppedFrames || 0) + 1;
-      return requestAnimationFrame(() => this.loop());
+      this.scheduleLoop();
+      return;
     }
 
     this.lastFrameStamp = frameStamp;
@@ -99,7 +125,7 @@ export class DeafCamera {
       this.pendingFrame = null;
       this.onStatus('Falha ao processar a imagem da câmara. Tente desligar e ligar novamente.', 'error');
     }
-    requestAnimationFrame(() => this.loop());
+    this.scheduleLoop();
   }
 
   onResult(result) {
@@ -121,7 +147,12 @@ export class DeafCamera {
     if (lm) this.handle(lm, res.gestures?.[0]?.[0]); else this.none();
   }
   draw(hands) {
-    const o = this.overlay, x = this.ctx; o.width = this.video.videoWidth; o.height = this.video.videoHeight; x.clearRect(0, 0, o.width, o.height);
+    const o = this.overlay, x = this.ctx;
+    if (o.width !== this.video.videoWidth || o.height !== this.video.videoHeight) {
+      o.width = this.video.videoWidth;
+      o.height = this.video.videoHeight;
+    }
+    x.clearRect(0, 0, o.width, o.height);
     for (const lm of hands) {
       x.lineWidth = 5; x.strokeStyle = 'rgba(255,255,255,.85)'; x.lineCap = 'round';
       for (const [a, b] of CONN) { x.beginPath(); x.moveTo(lm[a].x * o.width, lm[a].y * o.height); x.lineTo(lm[b].x * o.width, lm[b].y * o.height); x.stroke(); }
@@ -139,10 +170,10 @@ export class DeafCamera {
     else if (g && g.score > 0.55 && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
     if (!word && this.mode === 'words' && g?.categoryName === 'Open_Palm') word = this.wave(lm[0].x) ? this.meanings.wave : this.meanings.Open_Palm;
     if (g?.categoryName !== 'Open_Palm') this.wx = [];
-    if (word && word === this.cand) this.hold++; else { this.cand = word; this.hold = 0; }
+    if (word && word === this.cand) this.hold++; else { this.cand = word; this.hold = word ? 1 : 0; }
 
     const fast = Boolean(g && g.score > 0.78) || kind === 'letter';
-    const need = kind === 'letter' ? 5 : word === this.meanings.wave ? 1 : fast ? 3 : 4;
+    const need = kind === 'letter' ? 3 : word === this.meanings.wave ? 1 : fast ? 2 : 3;
     const candidateStartedAt = performance.now();
     this.onCandidate(word, word ? Math.min(1, this.hold / need) : 0, kind);
     const resultToUi = performance.now() - candidateStartedAt;

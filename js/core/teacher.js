@@ -72,9 +72,11 @@ function playServerSpeech({ audio, frames, names }, it, onEnd, text) {
 }
 
 let voices = [];
-if ('speechSynthesis' in window) { const lv = () => (voices = speechSynthesis.getVoices()); lv(); speechSynthesis.addEventListener('voiceschanged', lv); }
+const getSpeechSynthesis = () => (typeof window !== 'undefined' ? window.speechSynthesis : null);
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) { const lv = () => (voices = getSpeechSynthesis().getVoices()); lv(); getSpeechSynthesis().addEventListener?.('voiceschanged', lv); }
 function browserSpeech(text, it, lang, onEnd) {
-  if (!('speechSynthesis' in window)) { onEnd?.(); return null; }
+  const synth = getSpeechSynthesis();
+  if (!synth || !text || typeof SpeechSynthesisUtterance === 'undefined') { onEnd?.(); return null; }
   const u = new SpeechSynthesisUtterance(text);
   const v = voices.find((x) => x.lang.replace('_', '-') === lang) || voices.find((x) => x.lang.startsWith(lang.slice(0, 2)));
   u.lang = v?.lang || lang; if (v) u.voice = v; u.rate = 0.95;
@@ -90,7 +92,7 @@ function browserSpeech(text, it, lang, onEnd) {
     const w = text.slice(e.charIndex).split(/\s+/)[0] || ''; it.say(w, (e.charLength || w.length) * 70 + 90);
   };
   u.onend = u.onerror = () => { clearTimeout(timer); it.speaking = false; it.say('', 0); onEnd?.(); };
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+  synth.cancel(); synth.speak(u);
   return u;
 }
 // Voz do servidor sem Audio2Face: distribui as palavras pela duração real do áudio, em proporção ao tamanho.

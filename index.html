@@ -146,9 +146,7 @@
         <div class="loading" id="loading"><div class="spin"></div><b>A preparar o intérprete…</b></div>
         <div class="who" id="who" role="button" tabindex="0" title="Escolher o intérprete no camarim"><span class="who-ico" id="whoIco">🩺</span><span><b id="whoName">—</b><small id="whoRole"></small></span></div>
         <button class="pill-btn" id="frameBtn">Ver mãos de perto</button>
-        <div class="listening" id="listening" hidden><i></i>A ouvir…</div>
         <div class="letter" id="letter" aria-hidden="true"></div>
-        <div class="sub" aria-live="polite"><div id="sub"></div></div>
         <div class="pip rec" id="recPip" hidden>
           <video id="recVideo" playsinline muted></video>
           <canvas id="recOverlay"></canvas>
@@ -159,6 +157,10 @@
           <div class="pip-state" id="camState">Câmara desligada</div>
           <div class="pip-hold"><i id="hold"></i></div>
         </div>
+      </div>
+      <div class="speech-output" aria-live="polite">
+        <div class="listening" id="listening" hidden><i></i>A ouvir…</div>
+        <div class="sub"><div id="sub"></div></div>
       </div>
     </main>
 

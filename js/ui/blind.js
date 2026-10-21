@@ -31,7 +31,7 @@ export class BlindMode {
     this.root.hidden = false;
     this.say('Modo orientação. Toque no topo para saber onde está. No meio, para saber o que está à sua frente. Em baixo, para ler um texto ou pedir ajuda.');
   }
-  exit() { this.stopScan(); this.stopCam(); this.root.hidden = true; speechSynthesis.cancel(); this.onExit?.(); }
+  exit() { this.stopScan(); this.stopCam(); this.root.hidden = true; if (typeof window !== 'undefined') window.speechSynthesis?.cancel?.(); this.onExit?.(); }
   say(t, vib = 30) { this.$('.b-status').textContent = t; this.speak(t); navigator.vibrate?.(vib); }
 
   /* ---------- onde estou ---------- */

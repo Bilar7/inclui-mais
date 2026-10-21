@@ -39,6 +39,27 @@ test('DeafCamera commits the same gesture quickly without long hold delays', () 
   assert.equal(commits[0].kind, 'word');
 });
 
+test('DeafCamera confirms a stable medium-confidence gesture after two frames', () => {
+  const commits = [];
+  const cam = new DeafCamera({
+    video: { videoWidth: 640, videoHeight: 480 },
+    overlay: { getContext: makeCanvasContext },
+    onStatus() {},
+    onCandidate() {},
+    onCommit: (word, kind) => commits.push({ word, kind }),
+    onHand() {},
+  });
+  cam.mode = 'words';
+  cam.meanings = { Open_Palm: 'olá' };
+  const lm = makeLandmarks();
+
+  cam.handle(lm, { score: 0.8, categoryName: 'Open_Palm' });
+  assert.equal(commits.length, 0, 'should not commit an unconfirmed medium-confidence frame');
+  cam.handle(lm, { score: 0.8, categoryName: 'Open_Palm' });
+
+  assert.deepEqual(commits, [{ word: 'olá', kind: 'word' }]);
+});
+
 test('DeafCamera exposes latency metrics and discards stale frames while busy', () => {
   const commits = [];
   const cam = new DeafCamera({
@@ -104,4 +125,29 @@ test('DeafCamera processes fresh frames through the MediaPipe VIDEO API', () => 
   assert.equal(cam.metrics.lastFrameAt, 100);
   assert.equal(cam.inferenceBusy, false);
   assert.equal(cam.metrics.processedFrames, 1);
+});
+
+test('DeafCamera does not resize the overlay when camera dimensions are unchanged', () => {
+  let width = 640, height = 480, widthWrites = 0, heightWrites = 0;
+  const overlay = {
+    getContext: makeCanvasContext,
+    get width() { return width; },
+    set width(value) { widthWrites++; width = value; },
+    get height() { return height; },
+    set height(value) { heightWrites++; height = value; },
+  };
+  const cam = new DeafCamera({
+    video: { videoWidth: 640, videoHeight: 480 },
+    overlay,
+    onStatus() {},
+    onCandidate() {},
+    onCommit() {},
+    onHand() {},
+  });
+
+  cam.draw([]);
+  cam.draw([]);
+
+  assert.equal(widthWrites, 0);
+  assert.equal(heightWrites, 0);
 });

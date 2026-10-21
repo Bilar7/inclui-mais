@@ -4,24 +4,29 @@ export const store = {
   set(k, v) { try { localStorage.setItem('incluimais.' + k, JSON.stringify(v)); } catch { /* armazenamento indisponível */ } store.onSet?.(k, v); },
 };
 
+const getSpeechSynthesis = () => (typeof window !== 'undefined' ? window.speechSynthesis : null);
 let voices = [];
-const loadVoices = () => { voices = speechSynthesis.getVoices(); };
-if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+const loadVoices = () => {
+  const synth = getSpeechSynthesis();
+  voices = synth ? synth.getVoices() : [];
+};
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) { loadVoices(); getSpeechSynthesis().onvoiceschanged = loadVoices; }
 
 /** Fala um texto na língua escolhida. */
 export function speak(text, lang = 'pt-PT', hooks = {}) {
-  if (!('speechSynthesis' in window) || !text) return;
+  const synth = getSpeechSynthesis();
+  if (!synth || !text || typeof SpeechSynthesisUtterance === 'undefined') return;
   const u = new SpeechSynthesisUtterance(text);
   const base = lang.slice(0, 2);
   const v = voices.find((x) => x.lang.replace('_', '-') === lang) || voices.find((x) => x.lang.startsWith(base));
   u.lang = v?.lang || lang; if (v) u.voice = v;
   u.onstart = () => hooks.start?.(); u.onend = u.onerror = () => hooks.end?.();
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+  synth.cancel(); synth.speak(u);
 }
 
 /** Reconhecimento de fala (Chrome / Edge / Android). */
 export function listen(lang, { onText, onFinal, onStart, onEnd, onError, continuous = false }) {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
   if (!SR) { onError?.('unsupported'); return null; }
   const r = new SR(); r.lang = lang; r.interimResults = true; r.continuous = continuous;
   const finalized = new Set();
