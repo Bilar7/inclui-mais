@@ -99,7 +99,6 @@ addEventListener('keydown', (e) => { if ($('tour').hidden) return; if (e.key ===
 function enterApp() {
   $('intro').hidden = true; $('app').hidden = false;
   store.set('entered', true);
-  setTimeout(() => signText(lang() === 'en' ? 'Hello' : lang() === 'es' ? 'Hola' : 'Olá'), 500);
   it.fit?.();
 }
 
@@ -204,6 +203,8 @@ $('sayForm').onsubmit = (e) => { e.preventDefault(); hearing($('sayInput').value
 let rec = null;
 let micActive = false;
 let micInitialized = false;
+let lastMicFinal = '';
+let lastMicFinalAt = 0;
 function finishMicUi() {
   $('micBtn').classList.remove('on');
   $('listening').hidden = true;
@@ -222,7 +223,14 @@ function startContinuousMic() {
       $('listening').innerHTML = '<i></i>A ouvir…';
       $('listening').hidden = false;
     },
-    onFinal: (t) => hearing(t, { stream: true }),
+    onFinal: (t) => {
+      const key = t.trim().toLocaleLowerCase().replace(/[.!?,;:]+$/g, '');
+      const now = performance.now();
+      if (!key || (key === lastMicFinal && now - lastMicFinalAt < 1500)) return;
+      lastMicFinal = key;
+      lastMicFinalAt = now;
+      hearing(t, { stream: true });
+    },
     onError: (err) => {
       if (err === 'no-speech' || err === 'aborted') return;
       if (['unsupported', 'not-allowed', 'service-not-allowed', 'audio-capture'].includes(err)) micActive = false;
