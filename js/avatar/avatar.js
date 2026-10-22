@@ -69,7 +69,7 @@ export class Interpreter {
     const c = (this.controls = new OrbitControls(this.cam, canvas));
     c.enableDamping = true; c.enablePan = false; c.minDistance = 0.6; c.maxDistance = 7; c.minPolarAngle = 0.5; c.maxPolarAngle = 2.0;
     this.framing = 'full'; this.models = {}; this.rig = null; this.bgKey = null; this.backdrop = null;
-    this.queue = []; this.playing = null; this.speed = 1; this.speaking = false;
+    this.queue = []; this.playing = null; this.loopItems = null; this.speed = 1; this.speaking = false;
     this.face = {}; this.blink = 0; this.blinkT = 2; this.clock = new THREE.Clock();
     this.loader = new GLTFLoader(); this.loader.setMeshoptDecoder(MeshoptDecoder); // modelos comprimidos (leves para telemóvel)
     this.arkit = null; this.arkitAt = 0;
@@ -176,20 +176,43 @@ export class Interpreter {
   rest(a, rig, snap) { this.setGoal(a, null, rig); if (snap) { a.cur.p.copy(a.goal.p); a.cur.q.copy(a.goal.q); a.cur.shape = resolveShape(a, 'relax', thumbParams); a.from = null; } }
 
   /** Toca uma sequência de sinais. items: [{frames:[{R,L,t,letter}], expr, head, mouth, index, word}] */
-  play(items, cb = {}) { this.queue = items.map((x) => ({ ...x })); this.queue.push({ frames: [{ R: null, L: null, t: 0.7 }], end: true }); this.cb = cb; this.next(); }
+  play(items, cb = {}) {
+    this.cb = cb;
+    this.loopItems = typeof cb.repeatWhile === 'function' ? items.map((x) => ({ ...x })) : null;
+    const restTime = this.loopItems?.length ? 0.05 : 0.7;
+    this.queue = items.map((x) => ({ ...x }));
+    this.queue.push({ frames: [{ R: null, L: null, t: restTime }], end: true });
+    this.playing = null;
+    this.next();
+  }
   enqueue(items, cb = this.cb || {}) {
     const added = items.map((x) => ({ ...x }));
     if (!added.length) return;
     this.queue ||= [];
     this.cb = cb;
+    this.loopItems = null;
     const endIndex = this.queue.findIndex((item) => item.end);
     if (endIndex >= 0) this.queue.splice(endIndex, 0, ...added);
     else this.queue.push(...added, { frames: [{ R: null, L: null, t: 0.7 }], end: true });
     if (!this.playing || this.playing.end) this.next();
   }
   next() {
-    const p = (this.playing = this.queue.shift() || null);
-    this.cb?.onItem?.(p ? (p.end ? -1 : p.index) : -1, p);
+    const previous = this.playing;
+    const repeat = !!this.loopItems?.length && this.cb?.repeatWhile?.();
+    if (previous?.end) {
+      if (repeat) {
+        this.queue = this.loopItems.map((x) => ({ ...x }));
+        this.queue.push({ frames: [{ R: null, L: null, t: 0.05 }], end: true });
+      } else this.loopItems = null;
+    } else if (this.loopItems?.length && !repeat) this.queue = this.queue.filter((item) => item.end);
+    let p = this.queue.shift() || null;
+    if (p?.end && repeat) {
+      this.queue = this.loopItems.map((x) => ({ ...x }));
+      this.queue.push({ frames: [{ R: null, L: null, t: 0.05 }], end: true });
+      p = this.queue.shift() || null;
+    }
+    this.playing = p;
+    if (p || !previous?.end) this.cb?.onItem?.(p ? (p.end ? -1 : p.index) : -1, p);
     if (!p) { this.cb?.onLetter?.(''); return; }
     if (p.word && !p.end) this.writeBoard(p.word);
     p.i = 0; p.t = 0; p.el = 0; p.total = p.frames.reduce((s, f) => s + f.t, 0); this.apply();

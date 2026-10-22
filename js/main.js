@@ -308,12 +308,20 @@ async function askTeacher(q) {
   it.setMood(r.emotion && r.emotion !== 'neutral' ? r.emotion : null);
   // Sinaliza os conceitos-chave em simultâneo com a voz; palavras sem sinal são soletradas.
   const { labels, items: signs } = translateResponse(r, lang());
+  let speechFinished = false;
+  const finishSpeech = () => {
+    speechFinished = true;
+    setTimeout(() => it.setMood(null), 400);
+  };
   if (signs.length) {
     $('sub').innerHTML = labels.map((l) => `<span>${esc(l)} </span>`).join('');
     const spans = [...$('sub').children];
-    it.play(signs.map((x, i) => ({ ...x, index: i })), { onItem: (i) => spans.forEach((sp, k) => { sp.classList.toggle('now', k === i); if (i === -1 || k < i) sp.classList.add('done'); }) });
+    it.play(signs.map((x, i) => ({ ...x, index: i })), {
+      repeatWhile: () => !speechFinished,
+      onItem: (i) => spans.forEach((sp, k) => { sp.classList.toggle('now', k === i); if (i === -1 || k < i) sp.classList.add('done'); }),
+    });
   }
-  speakWithFace(r.answer, it, { lang: L().speech, words: lang(), onEnd: () => setTimeout(() => it.setMood(null), 400) });
+  speakWithFace(r.answer, it, { lang: L().speech, words: lang(), onEnd: finishSpeech });
 }
 $('askForm').onsubmit = (e) => { e.preventDefault(); askTeacher($('askInput').value); };
 let askRec = null;
