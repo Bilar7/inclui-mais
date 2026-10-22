@@ -25,11 +25,11 @@ export async function searchKnowledge(question, { lang = 'pt', fetchImpl = fetch
     explaintext: '1',
     exchars: String(MAX_EXTRACT_LENGTH),
     format: 'json',
+    origin: '*',
     utf8: '1',
   });
 
   const response = await fetchImpl(url, {
-    headers: { 'user-agent': 'IncluiMais/2.0 (educational assistant)' },
     signal: AbortSignal.timeout(7000),
   });
   if (!response.ok) throw new Error(`Wikipedia respondeu ${response.status}`);

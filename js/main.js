@@ -293,14 +293,15 @@ async function askTeacher(q) {
   $('askBtn').disabled = false;
   const sourceLabel = r.source === 'ia' ? 'Resposta da inteligência artificial'
     : r.source === 'wikipedia' ? 'Informação da Wikipédia — configure a IA no servidor para obter um resumo'
-    : 'Modo offline — ligue a IA no servidor para respostas completas';
+    : r.source === 'offline' ? 'Resposta do modo offline'
+    : 'Resposta local';
   const references = (r.sources || []).filter((source) => {
     try { return new URL(source.url).hostname.endsWith('.wikipedia.org'); } catch { return false; }
   });
   const sourceLinks = references.length
     ? `<small>Fontes: ${references.map((source) => `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.title)}</a>`).join(' · ')}</small>`
     : '';
-  const sourceWarning = r.sourcesUnavailable ? '<small>A pesquisa de fontes públicas não está disponível neste momento.</small>' : '';
+  const sourceWarning = r.sourcesUnavailable ? '<small>Não foi possível pesquisar fontes públicas. Verifica a ligação à internet e tenta novamente.</small>' : '';
   $('answer').innerHTML = `${esc(r.answer)}<small>${sourceLabel}</small>${sourceLinks}${sourceWarning}`;
   $('sub').innerHTML = '';
   log('t', r.answer);

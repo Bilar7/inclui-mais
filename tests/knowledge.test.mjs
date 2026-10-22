@@ -21,6 +21,7 @@ test('searchKnowledge returns short extracts with safe Wikipedia source links', 
 
   assert.equal(requestedUrl.hostname, 'pt.wikipedia.org');
   assert.equal(requestedUrl.searchParams.get('gsrlimit'), '3');
+  assert.equal(requestedUrl.searchParams.get('origin'), '*');
   assert.deepEqual(result.map((item) => item.title), ['Fotossíntese', 'Clorofila', 'Luz']);
   assert.equal(result[1].extract, 'Pigmento verde das plantas.');
   assert.equal(result[0].url, 'https://pt.wikipedia.org/?curid=11');

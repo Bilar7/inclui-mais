@@ -30,5 +30,5 @@ export function localAnswer(question, lang = 'pt') {
   }
   const hit = KB.find((e) => e.k.some((k) => q.includes(k)));
   if (hit) return { answer: hit.pt, emotion: hit.emotion, keywords: hit.kw };
-  return { answer: 'Ainda não sei responder a isso sem internet. Liga a inteligência artificial da Inclui+ ou pergunta ao professor da turma.', emotion: 'think', keywords: ['nao', 'perguntar', 'professor'] };
+  return { answer: 'Ainda não encontrei uma resposta fiável para esta pergunta. Verifica a ligação à internet, tenta reformular ou pergunta ao professor da turma.', emotion: 'think', keywords: ['nao', 'perguntar', 'professor'] };
 }

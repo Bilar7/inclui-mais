@@ -79,7 +79,7 @@ As imagens de abertura (`assets/brand/hero.jpg` para computador e `hero-m.jpg` p
 3. No repositório: **Settings → Pages → Source: GitHub Actions**. O ficheiro `.github/workflows/pages.yml` constrói e publica automaticamente a cada alteração.
 4. Abra `https://<utilizador>.github.io/inclui-mais/` no telemóvel e toque em **Instalar** (ou "Adicionar ao ecrã principal").
 
-O site publicado (https) tem tudo a funcionar: câmara, microfone, legendas, orientação para cegos e instalação no telemóvel. O professor com IA e pesquisa de fontes precisa do servidor Node.js (`server/`), alojado à parte (Render, Railway…), com `ANTHROPIC_API_KEY` configurada e acesso à internet. A pesquisa usa a API pública da Wikipédia; sem servidor, a aplicação usa o modo offline.
+O site publicado (https) tem tudo a funcionar: câmara, microfone, legendas, orientação para cegos e instalação no telemóvel. O professor pode consultar diretamente a API pública da Wikipédia para mostrar excertos com fontes, mesmo sem o servidor. Para respostas sintetizadas por IA, é necessário alojar o servidor Node.js (`server/`) à parte (Render, Railway…) e configurar `ANTHROPIC_API_KEY`. Sem internet, a aplicação usa o modo offline.
 
 ## Firebase (contas e base de sinais partilhada)
 A configuração do projeto `inclui-mais` já está em `assets/firebase-config.js` (estas chaves Web são públicas por natureza; a segurança está em `firestore.rules`). Sem internet, tudo continua a funcionar no dispositivo.

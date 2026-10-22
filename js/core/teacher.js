@@ -1,5 +1,6 @@
 // Professor virtual: pergunta → resposta (IA no servidor, ou modo offline) → voz com lábios sincronizados.
 import { localAnswer } from './tutor-offline.js';
+import { searchKnowledge } from '../../server/knowledge.js';
 
 let hasServer = null;
 async function serverUp() {
@@ -29,13 +30,47 @@ async function askClaudeHere(question, lang, place, history) {
 
 export async function ask(question, { lang = 'pt', place = 'escola', history = [] } = {}) {
   if (window.__INCLUI_EMBED) { try { const r = await askClaudeHere(question, lang, place, history); if (r?.answer) return r; } catch (e) { console.warn('IA indisponível', e); } }
+  let serverAnswer = null;
   if (await serverUp()) {
     try {
       const r = await fetch('api/tutor', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question, lang, place, history }), signal: AbortSignal.timeout(30000) });
-      if (r.ok) return await r.json();
-    } catch { /* cai para o modo offline */ }
+      if (r.ok) serverAnswer = await r.json();
+    } catch (e) { console.warn('Servidor do professor indisponível', e); }
   }
-  return { ...localAnswer(question, lang), source: 'offline' };
+  if (serverAnswer?.answer && !serverAnswer.answer.startsWith('Ainda não sei responder')) return serverAnswer;
+
+  const publicAnswer = await answerFromKnowledge(question, lang);
+  if (publicAnswer.answer) return publicAnswer;
+
+  const offline = serverAnswer || localAnswer(question, lang);
+  if (offline.answer.startsWith('Ainda não sei responder')) {
+    return {
+      ...offline,
+      answer: 'Ainda não encontrei uma resposta fiável para esta pergunta. Verifica a ligação à internet, tenta reformular ou pergunta ao professor da turma.',
+      source: 'offline',
+      sources: [],
+      sourcesUnavailable: publicAnswer.unavailable || serverAnswer?.sourcesUnavailable || false,
+    };
+  }
+  return { ...offline, source: offline.source || 'offline' };
+}
+
+export async function answerFromKnowledge(question, lang = 'pt', search = searchKnowledge) {
+  try {
+    const sources = await search(question, { lang });
+    if (!sources.length) return { answer: null, unavailable: false };
+    return {
+      answer: sources[0].extract,
+      emotion: 'think',
+      keywords: [],
+      source: 'wikipedia',
+      sources,
+      sourcesUnavailable: false,
+    };
+  } catch (error) {
+    console.warn('Pesquisa pública indisponível', error);
+    return { answer: null, unavailable: true };
+  }
 }
 
 /**
