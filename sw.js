@@ -1,6 +1,6 @@
 // Inclui+ — funciona sem internet depois da primeira visita (exceto o reconhecimento pela câmara na 1.ª vez).
-const VERSION = 'incluimais-v9';
-const CORE = ['./', 'index.html', 'app.js', 'css/app.css', 'assets/avatars/avatars.js', 'manifest.webmanifest', 'assets/brand/logo-full.png', 'assets/brand/badge.png', 'assets/icons/icon-192.png',
+const VERSION = 'incluimais-v10';
+const CORE = ['./', 'index.html', 'app.js', 'css/app.css?v=10', 'assets/avatars/avatars.js', 'manifest.webmanifest', 'assets/brand/logo-full.png', 'assets/brand/badge.png', 'assets/icons/icon-192.png',
   'assets/avatars/avatars.json', 'assets/avatars/standard/feminino.glb', 'assets/avatars/standard/masculino.glb', 'assets/brand/hero.jpg', 'assets/brand/hero-m.jpg'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(CORE))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k))))); self.clients.claim(); });
