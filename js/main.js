@@ -291,7 +291,17 @@ async function askTeacher(q) {
   const r = await ask(q, { lang: lang(), place: PLACES[place].name, history });
   history.push({ role: 'user', content: q }, { role: 'assistant', content: r.answer });
   $('askBtn').disabled = false;
-  $('answer').innerHTML = `${esc(r.answer)}<small>${r.source === 'ia' ? 'Resposta da inteligência artificial' : 'Modo offline — ligue a IA no servidor para respostas completas'}</small>`;
+  const sourceLabel = r.source === 'ia' ? 'Resposta da inteligência artificial'
+    : r.source === 'wikipedia' ? 'Informação da Wikipédia — configure a IA no servidor para obter um resumo'
+    : 'Modo offline — ligue a IA no servidor para respostas completas';
+  const references = (r.sources || []).filter((source) => {
+    try { return new URL(source.url).hostname.endsWith('.wikipedia.org'); } catch { return false; }
+  });
+  const sourceLinks = references.length
+    ? `<small>Fontes: ${references.map((source) => `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.title)}</a>`).join(' · ')}</small>`
+    : '';
+  const sourceWarning = r.sourcesUnavailable ? '<small>A pesquisa de fontes públicas não está disponível neste momento.</small>' : '';
+  $('answer').innerHTML = `${esc(r.answer)}<small>${sourceLabel}</small>${sourceLinks}${sourceWarning}`;
   $('sub').innerHTML = '';
   log('t', r.answer);
   it.setMood(r.emotion && r.emotion !== 'neutral' ? r.emotion : null);

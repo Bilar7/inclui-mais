@@ -49,7 +49,7 @@
   - olha com naturalidade;
   - faz os sinais das palavras-chave.
 
-  Usa IA (Claude) no servidor. Sem chave, há um modo offline com contas e respostas básicas.
+  Usa IA (Claude) no servidor e procura informação complementar na Wikipédia em português, inglês ou espanhol; mostra as fontes consultadas. Isto acrescenta referências durante a pergunta, sem treinar nem alterar o modelo de IA. Sem chave de IA, as perguntas conhecidas usam o modo offline e outras podem mostrar um excerto público com a respetiva fonte.
 - **Conversa:** registo com hora; partilhar por WhatsApp/e-mail.
 - **Instalar no telemóvel:** botão "Instalar" (Android/computador) ou "Adicionar ao ecrã principal" (iPhone); funciona sem internet depois da primeira visita.
 - **Acessibilidade:** texto grande, alto contraste, vibração, velocidade dos sinais.
@@ -79,7 +79,7 @@ As imagens de abertura (`assets/brand/hero.jpg` para computador e `hero-m.jpg` p
 3. No repositório: **Settings → Pages → Source: GitHub Actions**. O ficheiro `.github/workflows/pages.yml` constrói e publica automaticamente a cada alteração.
 4. Abra `https://<utilizador>.github.io/inclui-mais/` no telemóvel e toque em **Instalar** (ou "Adicionar ao ecrã principal").
 
-O site publicado (https) tem tudo a funcionar: câmara, microfone, legendas, orientação para cegos e instalação no telemóvel. O professor com IA completa precisa do servidor Node.js (`server/`), que pode ser alojado à parte (Render, Railway…); sem servidor usa o modo offline.
+O site publicado (https) tem tudo a funcionar: câmara, microfone, legendas, orientação para cegos e instalação no telemóvel. O professor com IA e pesquisa de fontes precisa do servidor Node.js (`server/`), alojado à parte (Render, Railway…), com `ANTHROPIC_API_KEY` configurada e acesso à internet. A pesquisa usa a API pública da Wikipédia; sem servidor, a aplicação usa o modo offline.
 
 ## Firebase (contas e base de sinais partilhada)
 A configuração do projeto `inclui-mais` já está em `assets/firebase-config.js` (estas chaves Web são públicas por natureza; a segurança está em `firestore.rules`). Sem internet, tudo continua a funcionar no dispositivo.
