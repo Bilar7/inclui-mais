@@ -2,7 +2,7 @@
 import { Interpreter, modelCatalog, pickModel } from './avatar/avatar.js';
 import { PERSONAS } from './avatar/customize.js';
 import { HS } from './avatar/handshapes.js';
-import { translate } from './sign/translate.js';
+import { translate, translateResponse } from './sign/translate.js';
 import { SIGNS, signLabel } from './sign/lexicon.js';
 import { letterFrames, LETTER_SPEC } from './sign/alphabet.js';
 import { SIGN_LANGS } from './core/languages.js';
@@ -305,10 +305,9 @@ async function askTeacher(q) {
   $('sub').innerHTML = '';
   log('t', r.answer);
   it.setMood(r.emotion && r.emotion !== 'neutral' ? r.emotion : null);
-  // sinais das palavras-chave (só sinais conhecidos; sem soletrar, para acompanhar a voz)
-  const signs = translate((r.keywords || []).join(' ') || r.answer, lang()).items.filter((x) => !x.spelled);
+  // Sinaliza os conceitos-chave em simultâneo com a voz; palavras sem sinal são soletradas.
+  const { labels, items: signs } = translateResponse(r, lang());
   if (signs.length) {
-    const labels = signs.map((x) => x.word);
     $('sub').innerHTML = labels.map((l) => `<span>${esc(l)} </span>`).join('');
     const spans = [...$('sub').children];
     it.play(signs.map((x, i) => ({ ...x, index: i })), { onItem: (i) => spans.forEach((sp, k) => { sp.classList.toggle('now', k === i); if (i === -1 || k < i) sp.classList.add('done'); }) });

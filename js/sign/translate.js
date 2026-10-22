@@ -50,3 +50,17 @@ export function translate(text, lang = 'pt') {
   }
   return { labels, items };
 }
+
+/** Prepara os conceitos da resposta do professor para o intérprete, soletrando palavras sem sinal conhecido. */
+export function translateResponse(response, lang = 'pt') {
+  const keywords = Array.isArray(response?.keywords)
+    ? response.keywords.filter((word) => typeof word === 'string' && word.trim()).join(' ')
+    : '';
+  const sourceTitle = Array.isArray(response?.sources)
+    ? response.sources.find((source) => typeof source?.title === 'string' && source.title.trim())?.title.trim()
+    : '';
+  const answer = typeof response?.answer === 'string' ? response.answer : '';
+  const text = keywords || sourceTitle || answer;
+  const translated = translate(text, lang);
+  return translated.items.length || text === answer ? translated : translate(answer, lang);
+}

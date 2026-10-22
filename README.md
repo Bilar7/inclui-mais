@@ -47,7 +47,7 @@
   - mexe os lábios sincronizados com a fala;
   - mostra expressão (pensar, sorrir…);
   - olha com naturalidade;
-  - faz os sinais das palavras-chave.
+  - faz os sinais das palavras-chave ao mesmo tempo que fala; palavras sem sinal conhecido são soletradas pelo avatar.
 
   Usa IA (Claude) no servidor e procura informação complementar na Wikipédia em português, inglês ou espanhol; mostra as fontes consultadas. Isto acrescenta referências durante a pergunta, sem treinar nem alterar o modelo de IA. Sem chave de IA, as perguntas conhecidas usam o modo offline e outras podem mostrar um excerto público com a respetiva fonte.
 - **Conversa:** registo com hora; partilhar por WhatsApp/e-mail.
