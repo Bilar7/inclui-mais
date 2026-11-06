@@ -25,12 +25,21 @@ export function speak(text, lang = 'pt-PT', hooks = {}) {
 }
 
 /** Reconhecimento de fala (Chrome / Edge / Android). */
-export function listen(lang, { onText, onFinal, onStart, onEnd, onError, continuous = false }) {
+export function listen(lang, { onText, onFinal, onStart, onEnd, onError, onSilence, continuous = false, silenceTimeout = 0 }) {
   const SR = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
   if (!SR) { onError?.('unsupported'); return null; }
   const r = new SR(); r.lang = lang; r.interimResults = true; r.continuous = continuous;
   const finalized = new Set();
   let oneShotFinal = false;
+  let silenceTimer = null;
+  const resetSilenceTimer = () => {
+    if (!silenceTimeout) return;
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      onSilence?.();
+      r.stop();
+    }, silenceTimeout);
+  };
   r.onstart = () => onStart?.();
   r.onresult = (e) => {
     let transcript = '';
@@ -46,6 +55,7 @@ export function listen(lang, { onText, onFinal, onStart, onEnd, onError, continu
       }
     }
     onText?.(transcript);
+    if (transcript.trim()) resetSilenceTimer();
     if (continuous) newFinals.forEach((text) => onFinal?.(text));
     else if (!oneShotFinal && e.results.length && e.results[e.results.length - 1].isFinal) {
       oneShotFinal = true;
@@ -53,8 +63,10 @@ export function listen(lang, { onText, onFinal, onStart, onEnd, onError, continu
     }
   };
   r.onerror = (e) => onError?.(e.error);
-  r.onend = () => onEnd?.();
-  r.start(); return r;
+  r.onend = () => { clearTimeout(silenceTimer); onEnd?.(); };
+  r.start();
+  resetSilenceTimer();
+  return r;
 }
 
 export const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

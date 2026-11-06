@@ -60,6 +60,34 @@ test('DeafCamera confirms a stable medium-confidence gesture after two frames', 
   assert.deepEqual(commits, [{ word: 'olá', kind: 'word' }]);
 });
 
+test('DeafCamera draws both hands and recognizes a gesture on the second hand', () => {
+  const commits = [];
+  let strokes = 0;
+  const ctx = makeCanvasContext();
+  ctx.stroke = () => { strokes++; };
+  const cam = new DeafCamera({
+    video: { videoWidth: 640, videoHeight: 480 },
+    overlay: { getContext: () => ctx },
+    onStatus() {},
+    onCandidate() {},
+    onCommit: (word, kind) => commits.push({ word, kind }),
+    onHand() {},
+  });
+  cam.mode = 'words';
+  cam.meanings = { Open_Palm: 'olá' };
+  const hands = [makeLandmarks(), makeLandmarks()];
+  const gestures = [
+    [{ score: 0.9, categoryName: 'None' }],
+    [{ score: 0.9, categoryName: 'Open_Palm' }],
+  ];
+
+  cam.onResult({ landmarks: hands, gestures });
+  assert.equal(strokes, 42, 'should draw the hand skeleton for both detected hands');
+  cam.onResult({ landmarks: hands, gestures });
+
+  assert.deepEqual(commits, [{ word: 'olá', kind: 'word' }], 'should recognize the hand with the detected gesture');
+});
+
 test('DeafCamera exposes latency metrics and discards stale frames while busy', () => {
   const commits = [];
   const cam = new DeafCamera({

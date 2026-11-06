@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 class FakeRecognition {
-  start() {}
-  stop() {}
+  start() { this.started = true; }
+  stop() { this.stopped = true; }
 }
 
 globalThis.window = { SpeechRecognition: FakeRecognition };
@@ -40,4 +40,24 @@ test('one-shot speech waits for the complete final result', () => {
 
   recognition.onresult({ results: [result('O professor', true), result('explica bem.', true)] });
   assert.deepEqual(finals, ['O professor explica bem.']);
+});
+
+test('continuous speech closes recognition after the configured silence period', async () => {
+  const recognition = listen('pt-BR', { continuous: true, silenceTimeout: 30 });
+  recognition.onstart();
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(recognition.stopped, undefined);
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(recognition.stopped, true);
+});
+
+test('new speech restarts the silence countdown', async () => {
+  const recognition = listen('pt-BR', { continuous: true, silenceTimeout: 40 });
+  recognition.onstart();
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  recognition.onresult({ results: [result('Olá', false)] });
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  assert.equal(recognition.stopped, undefined);
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  assert.equal(recognition.stopped, true);
 });

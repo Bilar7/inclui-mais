@@ -160,16 +160,37 @@ function langs() {
 }
 
 /* ---------- ouvinte → sinais ---------- */
+function compactSignLabels(labels, maxItems = 4) {
+  const compact = labels.slice(-maxItems);
+  if (compact.length < labels.length) compact.unshift('…');
+  return compact;
+}
+function renderSignText(labels, items, { allowGrow = true } = {}) {
+  const visibleLabels = allowGrow ? labels : compactSignLabels(labels, 4);
+  const container = $('sub');
+  container.innerHTML = '';
+  streamSignSpans.length = 0;
+  for (const label of visibleLabels) {
+    const span = document.createElement('span');
+    span.textContent = `${label} `;
+    streamSignSpans.push(span);
+    container.appendChild(span);
+  }
+  if (!visibleLabels.length) return;
+  const spans = [...container.children];
+  it.play(items.slice(0, items.length).map((item, index) => ({ ...item, index })), {
+    onItem: (i) => spans.forEach((s, k) => {
+      s.classList.toggle('now', k === i);
+      if (i === -1 || k < i) s.classList.add('done');
+    }),
+    onLetter: (c) => ($('letter').textContent = c),
+  });
+}
 function signText(text) {
   const { labels, items } = translate(text, lang());
   if (!items.length) return;
   trackEvent('translate', { sl, learned: items.filter((x) => x.learned).length });
-  $('sub').innerHTML = labels.map((l) => `<span>${esc(l)} </span>`).join('');
-  const spans = [...$('sub').children];
-  it.play(items, {
-    onItem: (i) => spans.forEach((s, k) => { s.classList.toggle('now', k === i); if (i === -1 || k < i) s.classList.add('done'); }),
-    onLetter: (c) => ($('letter').textContent = c),
-  });
+  renderSignText(labels, items, { allowGrow: false });
 }
 const streamSignSpans = [];
 const streamSignCallbacks = {
@@ -183,12 +204,18 @@ function appendSignText(text) {
   const { labels, items } = translate(text, lang());
   if (!items.length) return;
   trackEvent('translate', { sl, learned: items.filter((x) => x.learned).length });
+  const compactLabels = compactSignLabels(labels, 4);
   const offset = streamSignSpans.length;
-  for (const label of labels) {
+  for (const label of compactLabels) {
     const span = document.createElement('span');
     span.textContent = `${label} `;
     streamSignSpans.push(span);
     $('sub').appendChild(span);
+  }
+  if (streamSignSpans.length > 8) {
+    const extra = streamSignSpans.length - 8;
+    streamSignSpans.splice(0, extra);
+    [...$('sub').children].slice(0, extra).forEach((node) => node.remove());
   }
   it.enqueue(items.map((item) => ({ ...item, index: item.index + offset })), streamSignCallbacks);
 }
@@ -207,11 +234,14 @@ let lastMicFinal = '';
 let lastMicFinalAt = 0;
 function finishMicUi() {
   $('micBtn').classList.remove('on');
+  $('micBtn').setAttribute('aria-pressed', 'false');
+  $('micBtn').setAttribute('aria-label', 'Falar');
   $('listening').hidden = true;
 }
 function startContinuousMic() {
   const recognition = listen(L().speech, {
     continuous: true,
+    silenceTimeout: 2500,
     onStart: () => {
       if (!micInitialized) {
         streamSignSpans.length = 0;
@@ -220,9 +250,12 @@ function startContinuousMic() {
         micInitialized = true;
       }
       $('micBtn').classList.add('on');
+      $('micBtn').setAttribute('aria-pressed', 'true');
+      $('micBtn').setAttribute('aria-label', 'Parar de falar');
       $('listening').innerHTML = '<i></i>A ouvir…';
       $('listening').hidden = false;
     },
+    onSilence: () => { micActive = false; },
     onFinal: (t) => {
       const key = t.trim().toLocaleLowerCase().replace(/[.!?,;:]+$/g, '');
       const now = performance.now();
@@ -258,14 +291,18 @@ $('micBtn').onclick = () => {
   micActive = true;
   startContinuousMic();
 };
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && micActive) { micActive = false; rec?.stop(); }
+});
 
 /* ---------- modos ---------- */
 function setMode(m) {
+  if (m !== 'hear' && micActive) { micActive = false; rec?.stop(); }
   if (m !== 'teach' && !$('panelTeach').hidden) signStudio.close();
   for (const [k, id] of [['hear', 'Hear'], ['deaf', 'Deaf'], ['ask', 'Ask'], ['cards', 'Cards']]) { $('tab' + id).setAttribute('aria-selected', m === k); $('panel' + id).hidden = m !== k; }
   if (m === 'cards' && !$('panelCards').children.length) renderAAC($('panelCards'), { onSay: sayCard });
   $('pip').hidden = m !== 'deaf'; stage.classList.toggle('has-pip', m === 'deaf');
-  if (m !== 'deaf') { if (cam.on) cam.stop(); if (reader.on) reader.stop(); }
+  if (m !== 'deaf') { stage.classList.remove('camera-expanded'); $('camZoom').setAttribute('aria-pressed', 'false'); $('camZoom').textContent = '⛶ Ampliar'; if (cam.on) cam.stop(); if (reader.on) reader.stop(); }
   if (m === 'deaf' && !cam.on && !reader.on) startCam();
 }
 $('tabHear').onclick = () => setMode('hear');
@@ -367,6 +404,12 @@ async function startCam() {
   try { await cam.start(); } catch { /* mensagem já mostrada */ }
 }
 $('camBtn').onclick = () => (cam.on || reader.on ? (cam.stop(), reader.stop(), camStatus('Câmara desligada', 'off')) : startCam());
+$('camZoom').onclick = () => {
+  const expanded = stage.classList.toggle('camera-expanded');
+  $('camZoom').setAttribute('aria-pressed', String(expanded));
+  $('camZoom').textContent = expanded ? 'Reduzir' : '⛶ Ampliar';
+  $('camZoom').setAttribute('aria-label', expanded ? 'Reduzir a pré-visualização da câmara' : 'Ampliar a pré-visualização da câmara');
+};
 $('mWords').onclick = () => setRecog('words');
 $('mLetters').onclick = () => setRecog('letters');
 $('mPhrases').onclick = () => setRecog('phrases');

@@ -15,7 +15,7 @@ function loadRecognizer() {
     const opts = (d) => ({
       baseOptions: { modelAssetPath: MODEL, delegate: d },
       runningMode: 'VIDEO',
-      numHands: 1,
+      numHands: 2,
       minHandDetectionConfidence: 0.45,
       minHandPresenceConfidence: 0.45,
       minTrackingConfidence: 0.45,
@@ -70,7 +70,7 @@ export class DeafCamera {
     try {
       this.rec = await loadRecognizer();
       clearTimeout(slow);
-      this.onStatus('Mostre a mão à câmara', 'live');
+      this.onStatus('Mostre as duas mãos à câmara', 'live');
       this.loop();
     } catch (e) {
       clearTimeout(slow);
@@ -143,8 +143,23 @@ export class DeafCamera {
       this.pendingFrame = null;
     }
     this.draw(res.landmarks || []);
-    const lm = res.landmarks?.[0];
-    if (lm) this.handle(lm, res.gestures?.[0]?.[0]); else this.none();
+    const hands = res.landmarks || [];
+    if (!hands.length) { this.none(); return; }
+    let best = null;
+    for (let i = 0; i < hands.length; i++) {
+      const lm = hands[i], gesture = res.gestures?.[i]?.[0];
+      const pts = fromMediaPipe(lm, this.video.videoWidth, this.video.videoHeight);
+      const features = describe(pts);
+      const own = knn(features, this.custom, 5, 1.1);
+      const letter = this.mode === 'letters' ? knn(features, this.letters, 7, 1.35) : null;
+      const mappedGesture = this.mode !== 'letters' && gesture?.score > 0.55
+        && (this.meanings[gesture.categoryName] || (gesture.categoryName === 'Open_Palm' && this.meanings.wave));
+      const rank = own ? 3 - own.d / 1.1
+        : letter ? 2 - letter.d / 1.35
+          : mappedGesture ? 1 + gesture.score : 0;
+      if (!best || rank > best.rank) best = { lm, gesture, rank };
+    }
+    this.handle(best.lm, best.gesture);
   }
   draw(hands) {
     const o = this.overlay, x = this.ctx;

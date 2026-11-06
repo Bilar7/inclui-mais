@@ -6,12 +6,12 @@
 **Bilar DigitalTech Solutions** · aplicação web e móvel (PWA, instala-se no telemóvel) de tradução entre língua de sinais e voz, com intérprete virtual 3D, e ferramentas para pessoas surdas, cegas e sem fala.
 
 ## O que faz
-- **O ouvinte fala ou escreve.** O intérprete 3D traduz em sinais:
+- **O ouvinte fala ou escreve.** O microfone fecha automaticamente após 2,5 segundos sem fala; também é possível desligá-lo tocando no botão. O intérprete 3D traduz em sinais:
   - com braços, pulsos e dedos articulados;
   - com expressão facial (sorriso, dor, perguntas com sobrancelhas);
   - com acenos e abanos de cabeça;
   - com a boca a articular a palavra.
-- **A pessoa surda gesticula para a câmara.** A aplicação reconhece:
+- **A pessoa surda gesticula para a câmara.** A câmara acompanha até duas mãos, e a pré-visualização pode ser ampliada no telemóvel ou computador. A aplicação reconhece:
   - os gestos (Gestos);
   - as letras do alfabeto manual (Letras);
   - os sinais gravados pelos utilizadores (os seus e os validados pela comunidade);

@@ -50,7 +50,7 @@
       <article class="tour-slide">
         <div class="tour-art">🤟<span>➜</span>🔊</div>
         <h2>A pessoa surda gesticula.<br>A Inclui+ fala por ela.</h2>
-        <p>A câmara reconhece os gestos e as letras do alfabeto manual. A aplicação escreve e diz em voz alta.</p>
+        <p>A câmara acompanha as duas mãos, reconhece gestos e letras do alfabeto manual. Amplie a imagem para ver melhor. A aplicação escreve e diz em voz alta.</p>
       </article>
       <article class="tour-slide">
         <div class="tour-art">🎓</div>
@@ -155,6 +155,7 @@
           <canvas id="overlay"></canvas>
           <div class="pip-state" id="camState">Câmara desligada</div>
           <div class="pip-hold"><i id="hold"></i></div>
+          <button class="pip-zoom" id="camZoom" type="button" aria-label="Ampliar a pré-visualização da câmara" aria-pressed="false">⛶ Ampliar</button>
         </div>
       </div>
       <div class="speech-output" aria-live="polite">
@@ -173,11 +174,12 @@
 
       <div class="panel" id="panelHear">
         <form class="say" id="sayForm">
-          <button type="button" class="mic" id="micBtn" aria-label="Falar"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <button type="button" class="mic" id="micBtn" aria-label="Falar" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
           <label class="sr" for="sayInput">Escrever para traduzir</label>
           <input id="sayInput" autocomplete="off" enterkeyhint="send" placeholder="Fale ou escreva…">
           <button class="btn ink" type="submit">Traduzir</button>
         </form>
+        <p class="voice-hint">Toque no microfone para falar. A escuta fecha sozinha após 2,5 segundos sem fala.</p>
         <div class="chips" id="phrases"></div>
       </div>
 
