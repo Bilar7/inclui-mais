@@ -4,6 +4,7 @@ import { describe, fromMediaPipe, knn } from './features.js';
 
 const VISION = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task';
+const MIN_GESTURE_SCORE = 0.4;
 const CONN = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
 let recognizerPromise = null;
 
@@ -70,7 +71,7 @@ export class DeafCamera {
     try {
       this.rec = await loadRecognizer();
       clearTimeout(slow);
-      this.onStatus('Mostre as duas mãos à câmara', 'live');
+      this.onStatus('Mostre uma ou as duas mãos à câmara', 'live');
       this.loop();
     } catch (e) {
       clearTimeout(slow);
@@ -152,7 +153,7 @@ export class DeafCamera {
       const features = describe(pts);
       const own = knn(features, this.custom, 5, 1.1);
       const letter = this.mode === 'letters' ? knn(features, this.letters, 7, 1.35) : null;
-      const mappedGesture = this.mode !== 'letters' && gesture?.score > 0.55
+      const mappedGesture = this.mode !== 'letters' && gesture?.score >= MIN_GESTURE_SCORE
         && (this.meanings[gesture.categoryName] || (gesture.categoryName === 'Open_Palm' && this.meanings.wave));
       const rank = own ? 3 - own.d / 1.1
         : letter ? 2 - letter.d / 1.35
@@ -182,8 +183,8 @@ export class DeafCamera {
     const own = knn(f, this.custom, 5, 1.1);
     if (own) word = own.label;
     else if (this.mode === 'letters') { const l = knn(f, this.letters, 7, 1.35); if (l) { word = l.label; kind = 'letter'; } }
-    else if (g && g.score > 0.55 && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
-    if (!word && this.mode === 'words' && g?.categoryName === 'Open_Palm') word = this.wave(lm[0].x) ? this.meanings.wave : this.meanings.Open_Palm;
+    else if (g && g.score >= MIN_GESTURE_SCORE && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
+    if (!word && this.mode === 'words' && g?.score >= MIN_GESTURE_SCORE && g.categoryName === 'Open_Palm') word = this.wave(lm[0].x) ? this.meanings.wave : this.meanings.Open_Palm;
     if (g?.categoryName !== 'Open_Palm') this.wx = [];
     if (word && word === this.cand) this.hold++; else { this.cand = word; this.hold = word ? 1 : 0; }
 
