@@ -34,6 +34,7 @@ export class DeafCamera {
     this.ctx = overlay.getContext('2d');
     this.on = false; this.mode = 'words'; this.letters = []; this.custom = []; this.meanings = {};
     this.cand = null; this.hold = 0; this.last = ''; this.lastAt = 0; this.lostAt = 0;
+    this.handVisible = false;
     this.lastFrameStamp = -1; this.lastInference = 0; this.inferenceBusy = false; this.latestResult = null;
     this.metrics = { processedFrames: 0, droppedFrames: 0, inferenceErrors: 0, captureToResultMs: 0, resultToUiMs: 0, totalLatencyMs: 0, fps: 0, lastFrameAt: 0, lastResultAt: 0, lastUiAt: 0, lastDecision: null };
     this.pendingFrame = null;
@@ -170,21 +171,33 @@ export class DeafCamera {
     }
     x.clearRect(0, 0, o.width, o.height);
     for (const lm of hands) {
-      x.lineWidth = 5; x.strokeStyle = 'rgba(255,255,255,.85)'; x.lineCap = 'round';
-      for (const [a, b] of CONN) { x.beginPath(); x.moveTo(lm[a].x * o.width, lm[a].y * o.height); x.lineTo(lm[b].x * o.width, lm[b].y * o.height); x.stroke(); }
-      x.fillStyle = '#46b07a'; for (const p of lm) { x.beginPath(); x.arc(p.x * o.width, p.y * o.height, 5, 0, 7); x.fill(); }
+      x.lineCap = 'round';
+      for (const [a, b] of CONN) {
+        x.beginPath(); x.moveTo(lm[a].x * o.width, lm[a].y * o.height); x.lineTo(lm[b].x * o.width, lm[b].y * o.height);
+        x.lineWidth = 8; x.strokeStyle = 'rgba(13,27,51,.9)'; x.stroke();
+        x.lineWidth = 4; x.strokeStyle = '#fff'; x.stroke();
+      }
+      for (const p of lm) {
+        x.beginPath(); x.arc(p.x * o.width, p.y * o.height, 8, 0, 7);
+        x.fillStyle = '#0d1b33'; x.fill();
+        x.beginPath(); x.arc(p.x * o.width, p.y * o.height, 5, 0, 7);
+        x.fillStyle = '#b7ff4a'; x.fill();
+      }
     }
   }
   handle(lm, g) {
-    this.lostAt = 0; this.onHand?.(true);
+    this.lostAt = 0;
+    if (!this.handVisible) { this.handVisible = true; this.onHand?.(true); }
     const pts = fromMediaPipe(lm, this.video.videoWidth, this.video.videoHeight);
     const f = describe(pts);
     let word = null, kind = 'word';
     const own = knn(f, this.custom, 5, 1.1);
     if (own) word = own.label;
     else if (this.mode === 'letters') { const l = knn(f, this.letters, 7, 1.35); if (l) { word = l.label; kind = 'letter'; } }
-    else if (g && g.score >= MIN_GESTURE_SCORE && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
-    if (!word && this.mode === 'words' && g?.score >= MIN_GESTURE_SCORE && g.categoryName === 'Open_Palm') word = this.wave(lm[0].x) ? this.meanings.wave : this.meanings.Open_Palm;
+    else if (this.mode === 'words' && g?.score >= MIN_GESTURE_SCORE && g.categoryName === 'Open_Palm') {
+      const waving = this.wave(lm[0].x);
+      if (waving !== null) word = waving ? this.meanings.wave : this.meanings.Open_Palm;
+    } else if (g && g.score >= MIN_GESTURE_SCORE && g.categoryName !== 'None') word = this.meanings[g.categoryName] || null;
     if (g?.categoryName !== 'Open_Palm') this.wx = [];
     if (word && word === this.cand) this.hold++; else { this.cand = word; this.hold = word ? 1 : 0; }
 
@@ -206,13 +219,15 @@ export class DeafCamera {
     }
   }
   none() {
-    this.cand = null; this.hold = 0; this.wx = []; this.onHand?.(false); this.onCandidate(null, 0);
+    this.cand = null; this.hold = 0; this.wx = [];
+    if (this.handVisible) { this.handVisible = false; this.onHand?.(false); }
+    this.onCandidate(null, 0);
     if (!this.lostAt) this.lostAt = performance.now();
     if (performance.now() - this.lostAt > 1100) { this.last = ''; if (this.mode === 'letters') this.onCommit(null, 'space'); this.lostAt = performance.now() + 1e9; }
   }
   wave(x) {
     const now = performance.now(); (this.wx ||= []).push([now, x]); this.wx = this.wx.filter(([t]) => now - t < 1200);
-    if (this.wx.length < 8) return false;
+    if (this.wx.length < 8) return null;
     let turns = 0, dp = 0, mn = 1, mx = 0;
     for (let i = 1; i < this.wx.length; i++) { const d = this.wx[i][1] - this.wx[i - 1][1]; if (Math.abs(d) < 0.004) continue; const s = Math.sign(d); if (dp && s !== dp) turns++; dp = s; }
     for (const [, v] of this.wx) { mn = Math.min(mn, v); mx = Math.max(mx, v); }

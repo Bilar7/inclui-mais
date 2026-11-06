@@ -380,6 +380,7 @@ const cam = new DeafCamera({
   video: $('video'), overlay: $('overlay'),
   onStatus: (msg, kind, p) => { $('camState').textContent = msg; $('camBtn').textContent = kind === 'off' || kind === 'error' ? '📷 Ligar câmara' : '⏹ Desligar'; if (p != null) $('hold').style.width = p * 100 + '%'; if (kind === 'error') toast(msg); },
   onCandidate: (w, p) => { $('hold').style.width = p * 100 + '%'; if (w) $('camState').textContent = w; showHeard(w && p < 1 ? w : null); },
+  onHand: (visible) => { $('camState').textContent = visible ? 'Mão detetada — faça um gesto' : 'Mostre uma ou as duas mãos à câmara'; },
   onCommit: (w, kind) => {
     if (kind === 'space') { if (word) { heard.push(word); say(word); word = ''; showHeard(); } return; }
     if (kind === 'letter') { word += w; showHeard(); navigator.vibrate?.(25); return; }
