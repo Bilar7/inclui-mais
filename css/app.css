@@ -355,7 +355,7 @@ ul.list li button { border: 0; background: none; color: var(--rec); font-weight:
 .lang > span .flag { width: 34px; }
 
 @media (max-aspect-ratio: 4/5) {
-  .has-pip { --camera-column: clamp(210px, 56%, 330px); }
+  .has-pip { --camera-column: clamp(130px, 46%, 190px); }
   .stagewrap { position: relative; }
   #avatarCanvas { inset: 0 0 auto; height: calc(100% - clamp(56px, 8vh, 74px)); }
   .has-pip .pip:not(.rec) {
