@@ -296,7 +296,17 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ---------- modos ---------- */
-function setMode(m) {
+function setMode(m, compact = false) {
+  const app = $('app');
+  app.classList.toggle('deaf-mode', m === 'deaf');
+  app.classList.toggle('deaf-compact', m === 'deaf' || compact);
+  app.classList.remove('deaf-controls-open');
+  const activeMode = m === 'deaf' ? 'deaf' : m;
+  for (const button of $('deafQuickNav').querySelectorAll('[data-quick-mode]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.quickMode === activeMode));
+  }
+  $('deafToolsToggle').setAttribute('aria-expanded', 'false');
+  $('deafToolsToggle').setAttribute('aria-label', 'Abrir funções de comunicação');
   if (m !== 'hear' && micActive) { micActive = false; rec?.stop(); }
   if (m !== 'teach' && !$('panelTeach').hidden) signStudio.close();
   for (const [k, id] of [['hear', 'Hear'], ['deaf', 'Deaf'], ['ask', 'Ask'], ['cards', 'Cards']]) { $('tab' + id).setAttribute('aria-selected', m === k); $('panel' + id).hidden = m !== k; }
@@ -309,6 +319,15 @@ $('tabHear').onclick = () => setMode('hear');
 $('tabDeaf').onclick = () => setMode('deaf');
 $('tabAsk').onclick = () => setMode('ask');
 $('tabCards').onclick = () => setMode('cards');
+$('deafQuickNav').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-quick-mode]');
+  if (button) setMode(button.dataset.quickMode, true);
+});
+$('deafToolsToggle').onclick = () => {
+  const open = $('app').classList.toggle('deaf-controls-open');
+  $('deafToolsToggle').setAttribute('aria-expanded', String(open));
+  $('deafToolsToggle').setAttribute('aria-label', open ? 'Ocultar funções de comunicação' : 'Abrir funções de comunicação');
+};
 // cartão tocado → voz + sinais + legenda (a pessoa que não fala é ouvida e vista por todos)
 function sayCard(t) {
   log('d', t); $('sub').innerHTML = `<span class="now">🔊 ${esc(t)}</span>`;

@@ -165,7 +165,15 @@
       </div>
     </main>
 
-    <footer class="dock">
+    <aside class="deaf-compact-controls" id="deafCompactControls">
+      <nav class="deaf-quick-nav" id="deafQuickNav" aria-label="Atalhos de comunicação">
+        <button type="button" data-quick-mode="deaf" aria-label="Mudar para Surdo gesticula" title="Surdo gesticula" aria-pressed="true">✋</button>
+        <button type="button" data-quick-mode="cards" aria-label="Mudar para Cartões que falam" title="Cartões que falam" aria-pressed="false">💬</button>
+        <button type="button" data-quick-mode="ask" aria-label="Mudar para Perguntar ao professor" title="Perguntar ao professor" aria-pressed="false">🎓</button>
+      </nav>
+      <button class="deaf-tools-toggle" id="deafToolsToggle" type="button" aria-label="Abrir funções de comunicação" aria-controls="communicationDock" aria-expanded="false"></button>
+    </aside>
+    <footer class="dock" id="communicationDock">
       <div class="modes" role="tablist" aria-label="Quem comunica">
         <button role="tab" id="tabHear" aria-selected="true">🎙️ Ouvinte fala</button>
         <button role="tab" id="tabDeaf" aria-selected="false">✋ Surdo gesticula</button>

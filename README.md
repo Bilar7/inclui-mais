@@ -11,7 +11,7 @@
   - com expressão facial (sorriso, dor, perguntas com sobrancelhas);
   - com acenos e abanos de cabeça;
   - com a boca a articular a palavra.
-- **A pessoa surda gesticula para a câmara.** A câmara acompanha até duas mãos, e a pré-visualização pode ser ampliada no telemóvel ou computador. A aplicação reconhece:
+- **A pessoa surda gesticula para a câmara.** Ao entrar neste modo, os controlos recolhem para dar mais espaço ao intérprete e à câmara. A barra lateral mantém atalhos para Surdo, Cartões e Professor; o botão de menu abre ou fecha as funções completas. Ao ampliar a câmara, o intérprete mantém um pouco mais de largura. A câmara acompanha até duas mãos, e a pré-visualização pode ser ampliada no telemóvel ou computador. A aplicação reconhece:
   - os gestos (Gestos);
   - as letras do alfabeto manual (Letras);
   - os sinais gravados pelos utilizadores (os seus e os validados pela comunidade);
