@@ -321,7 +321,14 @@ $('tabAsk').onclick = () => setMode('ask');
 $('tabCards').onclick = () => setMode('cards');
 $('deafQuickNav').addEventListener('click', (event) => {
   const button = event.target.closest('[data-quick-mode]');
-  if (button) setMode(button.dataset.quickMode, true);
+  if (!button) return;
+  const mode = button.dataset.quickMode;
+  setMode(mode, true);
+  if (mode !== 'deaf') {
+    $('app').classList.add('deaf-controls-open');
+    $('deafToolsToggle').setAttribute('aria-expanded', 'true');
+    $('deafToolsToggle').setAttribute('aria-label', 'Ocultar funções de comunicação');
+  }
 });
 $('deafToolsToggle').onclick = () => {
   const open = $('app').classList.toggle('deaf-controls-open');
@@ -440,7 +447,7 @@ function setRecog(m) {
   if (m !== 'phrases') { cam.mode = m; if (reader.on) reader.stop(); } else if (cam.on) cam.stop();
   loadSamples(); if (was) startCam();
   toast(m === 'letters' ? 'Soletre com o alfabeto manual. Baixe a mão para terminar a palavra.'
-    : m === 'phrases' ? `Faça uma frase com os sinais aprendidos (${learnedSigns().length}). Uma pausa separa os sinais; baixe as mãos para terminar.` : 'A reconhecer gestos.');
+    : m === 'phrases' ? `Faça uma frase com os sinais aprendidos (${learnedSigns().length}). Mantenha corpo, braços e mãos visíveis; uma pausa separa os sinais.` : 'A reconhecer gestos.');
 }
 
 /* ---------- frases completas: sinais seguidos, reconhecidos por DTW contra os sinais aprendidos ---------- */
@@ -448,7 +455,7 @@ let phrase = [];
 const camStatus = (msg, kind) => { $('camState').textContent = msg; $('camBtn').textContent = kind === 'off' || kind === 'error' ? '📷 Ligar câmara' : '⏹ Desligar'; if (kind === 'error') toast(msg); };
 const reader = new SignRecorder({
   video: $('video'), overlay: $('overlay'), face: false, pauseSplit: true,
-  onStatus: (msg, kind) => camStatus(kind === 'live' ? 'Faça os sinais da frase' : msg, kind),
+  onStatus: (msg, kind) => camStatus(msg, kind),
   onSign: (s) => {
     const r = classify(s.frames, learnedSigns());
     if (!r) { $('camState').textContent = 'Sinal não reconhecido'; return; }
@@ -491,11 +498,20 @@ const signStudio = setupSignStudio({
   $, it, toast,
   ctx: {
     sl: () => sl, lang, share: () => prefs.contrib && !!cloud.user, // com ou sem conta, os sinais vão para a base comum
-    onOpen: () => { for (const id of ['Hear', 'Deaf', 'Ask', 'Cards']) { $('panel' + id).hidden = true; $('tab' + id).setAttribute('aria-selected', false); } if (cam.on) cam.stop(); $('pip').hidden = true; stage.classList.remove('has-pip'); },
+    onOpen: () => { for (const id of ['Hear', 'Deaf', 'Ask', 'Cards']) { $('panel' + id).hidden = true; $('tab' + id).setAttribute('aria-selected', false); } if (cam.on) cam.stop(); if (reader.on) reader.stop(); $('pip').hidden = true; stage.classList.remove('has-pip'); },
     onClose: () => setMode('hear'),
     onLearned: () => loadSamples(),
   },
 });
+$('demoSignNote').textContent = 'Os exemplos são palavras para demonstrar, não formas oficiais de sinal. Faça o sinal usado na sua comunidade; a câmara vai registar corpo, braços e mãos para reconhecer o seu exemplo.';
+$('bodyDemoBtn').onclick = () => {
+  const examples = {
+    pt: ['Olá', 'Obrigado', 'Sim', 'Não', 'Preciso de ajuda'],
+    en: ['Hello', 'Thank you', 'Yes', 'No', 'I need help'],
+    es: ['Hola', 'Gracias', 'Sí', 'No', 'Necesito ayuda'],
+  };
+  signStudio.open({ words: examples[L().words] || examples.pt });
+};
 
 /* ---------- estúdio e camarim ---------- */
 /** Muda a aparência do intérprete deste local (a profissão e a pessoa puxam a farda, o género e o título do nome). */

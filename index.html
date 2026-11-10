@@ -217,6 +217,7 @@
         <label class="sr" for="recWords">Palavras a gravar</label>
         <input id="recWords" class="rec-words" autocomplete="off" placeholder="Palavras a gravar, separadas por vírgulas. Ex.: bom dia, febre, obrigado">
         <p class="rec-state" id="recState" aria-live="polite">Escreva as palavras e carregue em Gravar.</p>
+        <p class="note" id="demoSignNote" hidden></p>
         <div class="takes" id="takes"></div>
       </div>
 
@@ -233,6 +234,7 @@
           <button class="btn" id="clearHeard">Limpar</button>
           <button class="btn" id="writeBtn" aria-label="Escrever">⌨️</button>
         </div>
+        <button class="btn" id="bodyDemoBtn">🧍 Treinar sinais com o corpo</button>
         <form class="say" id="writeForm" hidden>
           <label class="sr" for="writeInput">A pessoa surda escreve</label>
           <input id="writeInput" autocomplete="off" placeholder="Escreva a resposta…">

@@ -132,7 +132,6 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 .app.deaf-controls-open .deaf-tools-toggle::before { box-shadow: none; transform: rotate(45deg); }
 .app.deaf-controls-open .deaf-tools-toggle::after { content: ""; position: absolute; width: 18px; height: 2px; background: currentColor; transform: rotate(-45deg); }
 .app.deaf-controls-open .deaf-compact-controls { display: flex; }
-.app.deaf-controls-open .deaf-quick-nav { display: none; }
 .app.deaf-controls-open .deaf-tools-toggle { background: var(--ocean); border-radius: 13px; color: #fff; }
 .modes { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 4px; }
 .modes button { flex: 1; border: 0; background: transparent; border-radius: 12px; padding: 10px; font-weight: 800; color: var(--muted); }

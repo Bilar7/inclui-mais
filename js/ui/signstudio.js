@@ -25,10 +25,14 @@ export function setupSignStudio({ $, it, toast, ctx }) {
   });
 
   /* ---------- abrir / fechar ---------- */
-  async function open() {
+  async function open({ words } = {}) {
     ctx.onOpen(); $('panelTeach').hidden = false; $('recPip').hidden = false;
+    $('demoSignNote').hidden = !words;
+    $('recWords').value = words ? words.join(', ') : $('recWords').value;
+    if (words) setMode('auto');
     const L = SIGN_LANGS[ctx.sl()]; $('teachLang').innerHTML = `· ${flag(L.country)} ${L.short}`;
     if (!rec.on) await rec.start();
+    if (words && rec.on) $('recState').textContent = 'Faça um sinal de cada vez: levante os braços para começar e baixe-os no fim. Guarde cada exemplo revisto.';
   }
   function close() { rec.stop(); setGo(false); $('panelTeach').hidden = true; $('recPip').hidden = true; ctx.onClose(); }
   $('teachClose').onclick = close;

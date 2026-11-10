@@ -15,7 +15,8 @@
   - os gestos (Gestos);
   - as letras do alfabeto manual (Letras);
   - os sinais gravados pelos utilizadores (os seus e os validados pela comunidade);
-  - **frases completas** (Frases): cada sinal é comparado por DTW com os sinais gravados; uma pausa separa os sinais e, ao baixar as mãos, a frase é dita em voz alta.
+  - **frases completas** (Frases): cada sinal é comparado por DTW com os sinais gravados; uma pausa separa os sinais e, ao baixar as mãos, a frase é dita em voz alta. Este modo também grava articulações visíveis do corpo para reconhecer movimentos de braços e tronco nos exemplos pessoais.
+  - **Treinar sinais com o corpo:** exemplos guiados de “Olá”, “Obrigado”, “Sim”, “Não” e “Preciso de ajuda” preenchem o gravador. A pessoa executa e guarda os seus próprios sinais; as palavras de exemplo não prescrevem uma forma oficial para nenhuma língua.
 
   Depois diz em voz alta o que foi reconhecido. A pessoa surda também pode escrever a resposta.
 - **Quem vai usar:** no início cada pessoa escolhe o seu caminho: falo com surdos, sou surdo, ouço mal, sou cego ou vejo mal, não consigo falar, quero aprender sinais.

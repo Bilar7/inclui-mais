@@ -4,7 +4,7 @@
 //  • Automático: começa quando as mãos sobem e termina quando descem — grava várias palavras seguidas.
 //  • Frases (pauseSplit): durante a sinalização contínua, uma pausa curta das mãos também separa os sinais.
 import { frameFrom, faceFrom } from './retarget.js';
-import { describe, fromMediaPipe } from './features.js';
+import { describe, fromMediaPipe, poseFeatures, poseHandsRaised, poseMotion } from './features.js';
 
 const VISION = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const M = 'https://storage.googleapis.com/mediapipe-models/';
@@ -15,7 +15,8 @@ const MODELS = {
 };
 const FPS = 12;          // fotogramas por segundo guardados em cada sinal
 const MAX_MS = 8000;     // duração máxima de um sinal
-const BONES = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24]];
+const BONES = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24],
+  [23, 25], [25, 27], [27, 29], [29, 31], [24, 26], [26, 28], [28, 30], [30, 32]];
 
 let base = null, faceTask = null;
 const make = async (V, fs, Cls, model, extra) => {
@@ -52,7 +53,7 @@ export class SignRecorder {
     this.on = true;
     this.onStatus('A preparar o reconhecimento do corpo, das mãos e do rosto… (só demora na primeira vez)', 'busy');
     try { this.t = await loadTasks(this.useFace); } catch { this.onStatus('Não foi possível descarregar o reconhecimento. Verifique a internet.', 'error'); return false; }
-    this.onStatus('Pronto. Fique de frente, com o corpo da cintura para cima visível.', 'live');
+    this.onStatus('Pronto. Fique de frente, com o corpo, os braços e as mãos visíveis.', 'live');
     this.loop();
     return true;
   }
@@ -82,8 +83,10 @@ export class SignRecorder {
       // o rosto é mais pesado: um em cada dois fotogramas chega para a expressão
       if (this.useFace && (this.n = (this.n || 0) + 1) % 2 === 0) this.face = faceFrom(this.t.face.detectForVideo(v, now).faceBlendshapes?.[0]?.categories);
       this.draw(pose.landmarks?.[0], hands.landmarks || []);
-      const fr = pose.landmarks?.[0] && frameFrom({ pose: pose.landmarks[0], poseWorld: pose.worldLandmarks?.[0], hands: hands.landmarks || [], handsWorld: hands.worldLandmarks || [], face: this.face });
-      this.step(fr, pose.landmarks?.[0], hands.landmarks || [], now);
+      const poseLandmarks = pose.landmarks?.[0];
+      const frame = poseLandmarks && frameFrom({ pose: poseLandmarks, poseWorld: pose.worldLandmarks?.[0], hands: hands.landmarks || [], handsWorld: hands.worldLandmarks || [], face: this.face });
+      const fr = poseLandmarks && { ...(frame || { R: null, L: null, face: this.face }), body: poseFeatures(poseLandmarks) };
+      this.step(fr, poseLandmarks, hands.landmarks || [], now);
     }
     requestAnimationFrame(() => this.loop());
   }
@@ -91,7 +94,7 @@ export class SignRecorder {
   /** Decide quando começa e acaba cada sinal e guarda os fotogramas. */
   step(fr, pose, hands, now) {
     // mãos "ativas": detetadas e acima da cintura (a meio entre os ombros e as ancas, ou mais alto)
-    const up = pose && hands.length && [15, 16].some((i) => pose[i].visibility > 0.5 && pose[i].y < (pose[23].y + pose[11].y) / 2 + 0.06);
+    const up = poseHandsRaised(pose);
     if (this.mode === 'auto' && this.armed) {
       this.upN = up ? (this.upN || 0) + 1 : 0; this.downN = up ? 0 : (this.downN || 0) + 1;
       const moving = this.motion(fr);
@@ -109,9 +112,15 @@ export class SignRecorder {
 
   /** Mãos em movimento? (conta os fotogramas parados, para separar sinais numa frase) */
   motion(fr) {
-    const p = fr && (fr.R?.p || fr.L?.p);
-    const d = p && this.lastP ? Math.hypot(p[0] - this.lastP[0], p[1] - this.lastP[1], p[2] - this.lastP[2]) : 0;
-    this.lastP = p || null;
+    const body = fr?.body;
+    const bodyDelta = poseMotion(body, this.lastBody);
+    let d = bodyDelta ?? 0;
+    if (bodyDelta == null) {
+      const p = fr && (fr.R?.p || fr.L?.p);
+      d = p && this.lastP ? Math.hypot(p[0] - this.lastP[0], p[1] - this.lastP[1], p[2] - this.lastP[2]) : 0;
+      this.lastP = p || null;
+    }
+    this.lastBody = body || null;
     this.stillN = d < 0.004 ? (this.stillN || 0) + 1 : 0;
     return d > 0.008;
   }
@@ -164,7 +173,7 @@ function resample(frames) {
       const ref = mid[k] || list.find(Boolean);
       return { p: avg(list, 'p'), f: avg(list, 'f'), palm: avg(list, 'palm'), hs: ref.hs };
     };
-    out.push({ R: hand('R'), L: hand('L'), face: mid.face || undefined, t: 1 / FPS });
+    out.push({ R: hand('R'), L: hand('L'), body: mid.body, face: mid.face || undefined, t: 1 / FPS });
   }
   out[0].t = 0.25; // entrada suave no primeiro fotograma
   return out;

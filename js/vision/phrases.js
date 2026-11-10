@@ -2,8 +2,9 @@
 // (os meus e os da comunidade) por DTW — compara movimentos mesmo que sejam feitos mais depressa ou devagar.
 // Os sinais reconhecidos juntam-se numa frase, que é dita em voz alta quando a pessoa baixa as mãos.
 
-// descrição de um fotograma: para cada mão, posição do pulso, direção dos dedos, normal da palma e dobra de cada dedo
+// descrição de um fotograma: mãos e articulações visíveis do corpo
 const HAND = 14;
+const BODY_POINTS = 33;
 function handVec(h, out, o) {
   if (!h) { out[o + 13] = 0; return; }
   out.set(h.p, o); out.set(h.f, o + 3); out.set(h.palm, o + 6);
@@ -13,12 +14,33 @@ function handVec(h, out, o) {
 // pesos: a posição conta mais, depois a forma da mão e a orientação
 const W = Float32Array.from([2.2, 2.2, 2.2, 0.8, 0.8, 0.8, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.7, 1]);
 function features(frames) {
-  return frames.map((f) => { const v = new Float32Array(HAND * 2); handVec(f.R, v, 0); handVec(f.L, v, HAND); return v; });
+  return frames.map((f) => {
+    const hands = new Float32Array(HAND * 2);
+    handVec(f.R, hands, 0); handVec(f.L, hands, HAND);
+    return { hands, body: f.body?.length === BODY_POINTS * 4 ? f.body : null };
+  });
 }
-function dist(a, b) {
+function handDistance(a, b) {
   let s = 0;
   for (let i = 0; i < a.length; i++) { const d = (a[i] - b[i]) * W[i % HAND]; s += d * d; }
   return Math.sqrt(s);
+}
+function bodyDistance(a, b) {
+  let total = 0, count = 0;
+  for (let i = 0; i < BODY_POINTS; i++) {
+    const o = i * 4, av = a[o + 3], bv = b[o + 3];
+    if (av < 0.35 && bv < 0.35) continue;
+    count++;
+    if (av < 0.35 || bv < 0.35) { total += 0.3; continue; }
+    const dx = a[o] - b[o], dy = a[o + 1] - b[o + 1], dz = a[o + 2] - b[o + 2];
+    total += (dx * dx + dy * dy + 0.5 * dz * dz) / 2.5;
+  }
+  return Math.sqrt(total / Math.max(1, count));
+}
+function frameDistance(a, b) {
+  const hands = handDistance(a.hands, b.hands);
+  if (!a.body || !b.body) return hands;
+  return hands * 0.55 + bodyDistance(a.body, b.body) * 0.45;
 }
 /** Distância DTW normalizada entre duas sequências (com faixa de Sakoe-Chiba para não deformar demais). */
 function dtw(a, b) {
@@ -28,7 +50,7 @@ function dtw(a, b) {
   for (let i = 1; i <= n; i++) {
     cur.fill(Infinity);
     const c = Math.round(i * m / n), lo = Math.max(1, c - band), hi = Math.min(m, c + band);
-    for (let j = lo; j <= hi; j++) cur[j] = dist(a[i - 1], b[j - 1]) + Math.min(prev[j], prev[j - 1], cur[j - 1]);
+    for (let j = lo; j <= hi; j++) cur[j] = frameDistance(a[i - 1], b[j - 1]) + Math.min(prev[j], prev[j - 1], cur[j - 1]);
     [prev, cur] = [cur, prev];
   }
   return prev[m] / (n + m);

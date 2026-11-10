@@ -26,6 +26,46 @@ export function fromMediaPipe(lm, w = 640, h = 480) {
   return lm.map((p) => [p.x * w, -p.y * h, -p.z * w]);
 }
 
+/** Corpo normalizado pelo tronco: conserva movimentos da cabeça, braços, tronco e pernas sem depender da distância à câmara. */
+export function poseFeatures(landmarks) {
+  if (!landmarks || landmarks.length < 33) return null;
+  const point = (i) => landmarks[i];
+  const hipsVisible = point(23).visibility >= 0.35 && point(24).visibility >= 0.35;
+  const center = hipsVisible
+    ? [(point(23).x + point(24).x) / 2, (point(23).y + point(24).y) / 2, (point(23).z + point(24).z) / 2]
+    : [(point(11).x + point(12).x) / 2, (point(11).y + point(12).y) / 2, (point(11).z + point(12).z) / 2];
+  const shoulderWidth = Math.hypot(point(11).x - point(12).x, point(11).y - point(12).y, point(11).z - point(12).z) || 0.1;
+  const result = [];
+  for (const p of landmarks) {
+    const visibility = Math.max(0, Math.min(1, p.visibility ?? p.presence ?? 0));
+    result.push(
+      Math.round((p.x - center[0]) / shoulderWidth * 1000) / 1000,
+      Math.round((center[1] - p.y) / shoulderWidth * 1000) / 1000,
+      Math.round((p.z - center[2]) / shoulderWidth * 1000) / 1000,
+      Math.round(visibility * 100) / 100,
+    );
+  }
+  return result;
+}
+
+export function poseHandsRaised(landmarks) {
+  if (!landmarks || landmarks.length < 33) return false;
+  const hipsVisible = landmarks[23].visibility > 0.3 && landmarks[24].visibility > 0.3;
+  const waist = hipsVisible ? (landmarks[23].y + landmarks[24].y) / 2 : landmarks[11].y;
+  return [15, 16].some((i) => landmarks[i].visibility > 0.5 && landmarks[i].y < waist + 0.06);
+}
+
+export function poseMotion(a, b) {
+  if (!a || !b || a.length !== 33 * 4 || b.length !== 33 * 4) return null;
+  const points = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
+  const moved = points.filter((i) => a[i * 4 + 3] >= 0.35 && b[i * 4 + 3] >= 0.35);
+  if (!moved.length) return null;
+  return moved.reduce((sum, i) => {
+    const o = i * 4;
+    return sum + Math.hypot(a[o] - b[o], a[o + 1] - b[o + 1], a[o + 2] - b[o + 2]);
+  }, 0) / moved.length;
+}
+
 function distance(a, b) { let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; } return Math.sqrt(s); }
 
 /** k vizinhos mais próximos com voto. Devolve { label, d } ou null. */
